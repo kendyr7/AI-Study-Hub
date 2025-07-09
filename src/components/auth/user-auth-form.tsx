@@ -20,9 +20,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Github, Loader2 } from "lucide-react";
+import { Github, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -57,6 +58,18 @@ export function UserAuthForm({ className, signup = false, ...props }: UserAuthFo
       password: "",
     },
   });
+  
+  if (!auth) {
+    return (
+        <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Authentication Not Configured</AlertTitle>
+            <AlertDescription>
+                Please add your Firebase project credentials to the <code>.env</code> file to enable user sign-in and sign-up.
+            </AlertDescription>
+        </Alert>
+    );
+  }
 
   const handleAuthError = (error: AuthError) => {
     switch (error.code) {
@@ -70,7 +83,8 @@ export function UserAuthForm({ className, signup = false, ...props }: UserAuthFo
       case "auth/weak-password":
         return "Password should be at least 6 characters.";
       case "auth/invalid-api-key":
-        return "Firebase API Key is invalid. Please check your project configuration.";
+      case "auth/configuration-not-found":
+        return "Firebase configuration is invalid. Please check your project setup.";
       case "auth/network-request-failed":
         return "A network error occurred. Please check your internet connection and try again.";
       case "auth/popup-closed-by-user":
@@ -84,9 +98,6 @@ export function UserAuthForm({ className, signup = false, ...props }: UserAuthFo
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      if (!auth) {
-        throw new Error("Firebase is not configured correctly on the client.");
-      }
       if (signup) {
         await createUserWithEmailAndPassword(auth, values.email, values.password);
       } else {
@@ -114,9 +125,6 @@ export function UserAuthForm({ className, signup = false, ...props }: UserAuthFo
     setIsProviderLoading(providerName);
     const provider = providerName === 'google' ? new GoogleAuthProvider() : new GithubAuthProvider();
     try {
-       if (!auth) {
-        throw new Error("Firebase is not configured correctly on the client.");
-      }
       await signInWithPopup(auth, provider);
       router.push('/dashboard');
     } catch (error: any) {

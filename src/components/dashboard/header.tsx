@@ -59,6 +59,11 @@ export function Header() {
   const router = useRouter();
 
   const handleLogout = async () => {
+    if (!auth) {
+        console.error("Firebase not configured, cannot log out.");
+        // Optionally show a toast message to the user
+        return;
+    }
     try {
         await signOut(auth);
         router.push('/');
@@ -142,7 +147,7 @@ export function Header() {
               <Link href="/dashboard/settings"><Settings className="mr-2" />Settings</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
+            <DropdownMenuItem onClick={handleLogout} disabled={!auth}>
               <LogOut className="mr-2" />Logout
             </DropdownMenuItem>
           </DropdownMenuContent>

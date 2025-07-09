@@ -6,16 +6,18 @@ function initializeAdminApp() {
     return admin.app();
   }
 
-  if (!process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+  const serviceAccountBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
+
+  if (!serviceAccountBase64 || serviceAccountBase64 === "YOUR_SERVICE_ACCOUNT_BASE64_HERE") {
     console.warn(
-      'FIREBASE_SERVICE_ACCOUNT_BASE64 is not set. Firebase Admin features will be disabled.'
+      'FIREBASE_SERVICE_ACCOUNT_BASE64 is not set or is a placeholder. Firebase Admin features will be disabled.'
     );
     return null;
   }
 
   try {
     const serviceAccountString = Buffer.from(
-      process.env.FIREBASE_SERVICE_ACCOUNT_BASE64,
+      serviceAccountBase64,
       'base64'
     ).toString('utf-8');
 
