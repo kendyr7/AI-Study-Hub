@@ -76,3 +76,21 @@ export async function createTopicAction(formData: { title: string; tags: string;
     return { success: false, error: `Failed to create topic: ${errorMessage}` };
   }
 }
+
+export async function updateTopicSummaryAction(formData: { topicId: string; summary: string }) {
+  if (!adminDb) {
+    console.error("Firebase Admin not initialized. Cannot update topic.");
+    return { success: false, error: "Database not configured." };
+  }
+  
+  const { topicId, summary } = formData;
+
+  try {
+    const topicRef = adminDb.collection('topics').doc(topicId);
+    await topicRef.update({ summary });
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error updating topic summary:", error);
+    return { success: false, error: `Failed to update summary: ${error.message}` };
+  }
+}

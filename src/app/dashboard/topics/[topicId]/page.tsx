@@ -1,13 +1,8 @@
 import { adminDb } from '@/lib/firebase';
 import type { Topic, Flashcard, TestQuestion } from '@/lib/types';
 import { notFound } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BookText, Copy, TestTube } from 'lucide-react';
-import { FlashcardViewer } from './_components/flashcard-viewer';
-import { PracticeTest } from './_components/practice-test';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { TopicDetailsTabs } from './_components/topic-details-tabs';
+
 
 async function getTopicDetails(topicId: string) {
     if (!adminDb) {
@@ -82,59 +77,11 @@ export default async function TopicDetailsPage({ params }: { params: { topicId: 
                 <h1 className="text-3xl font-bold tracking-tight font-headline">{topic.title}</h1>
                 <p className="text-muted-foreground">Study your topic using the AI-generated materials below.</p>
             </div>
-
-            <Tabs defaultValue="summary" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="summary"><BookText className="mr-2 h-4 w-4" />Summary</TabsTrigger>
-                    <TabsTrigger value="flashcards"><Copy className="mr-2 h-4 w-4" />Flashcards</TabsTrigger>
-                    <TabsTrigger value="test"><TestTube className="mr-2 h-4 w-4" />Practice Test</TabsTrigger>
-                </TabsList>
-                <TabsContent value="summary" className="mt-4">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>AI-Generated Summary</CardTitle>
-                            <CardDescription>A detailed overview of your study material, with key concepts highlighted.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="prose dark:prose-invert max-w-none">
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                    {topic.summary}
-                                </ReactMarkdown>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="flashcards" className="mt-4">
-                     <Card>
-                        <CardHeader>
-                            <CardTitle>Flashcards</CardTitle>
-                            <CardDescription>Flip through your flashcards to test your recall.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                           {flashcards.length > 0 ? (
-                                <FlashcardViewer flashcards={flashcards} />
-                            ) : (
-                                <p className="text-muted-foreground text-center py-8">No flashcards were generated for this topic.</p>
-                            )}
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="test" className="mt-4">
-                     <Card>
-                        <CardHeader>
-                            <CardTitle>Practice Test</CardTitle>
-                            <CardDescription>Check your understanding with a short test.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {testQuestions.length > 0 ? (
-                                <PracticeTest questions={testQuestions} />
-                            ) : (
-                                <p className="text-muted-foreground text-center py-8">No test questions were generated for this topic.</p>
-                            )}
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
+            <TopicDetailsTabs 
+                initialTopic={topic}
+                flashcards={flashcards}
+                testQuestions={testQuestions}
+            />
         </div>
     );
 }
