@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -18,7 +19,7 @@ import { Search, Settings, CircleUser, LogOut, Menu } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { signOut } from 'firebase/auth';
+import { signOut, onAuthStateChanged, type User } from 'firebase/auth';
 import { auth } from '@/lib/firebase-client';
 
 function NavItem({ href, children }: { href: string, children: React.ReactNode }) {
@@ -56,7 +57,16 @@ function MobileNavItem({ href, children, onClick }: { href: string, children: Re
 
 export function Header() {
   const [open, setOpen] = React.useState(false);
+  const [user, setUser] = React.useState<User | null>(null);
   const router = useRouter();
+
+  React.useEffect(() => {
+    if (!auth) return;
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleLogout = async () => {
     if (!auth) {
@@ -83,6 +93,15 @@ export function Header() {
     { href: "/dashboard/profile", label: "Profile" },
     { href: "/dashboard/settings", label: "Settings" },
   ]
+  
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return 'U';
+    const names = name.trim().split(' ');
+    if (names.length > 1 && names[0] && names[names.length - 1]) {
+        return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+    }
+    return name[0]?.toUpperCase() || 'U';
+  }
 
   return (
     <header className="sticky top-0 z-50 flex h-20 w-full items-center justify-between gap-4 border-b border-white/10 bg-background/50 px-4 backdrop-blur-xl md:top-4 md:mx-auto md:w-[calc(100%-3rem)] md:rounded-2xl md:border md:px-6">
@@ -132,8 +151,8 @@ export function Header() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
               <Avatar>
-                <AvatarImage src="https://placehold.co/100x100.png" alt="User Avatar" data-ai-hint="user avatar" />
-                <AvatarFallback>U</AvatarFallback>
+                <AvatarImage src={user?.photoURL || undefined} alt="User Avatar" />
+                <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
