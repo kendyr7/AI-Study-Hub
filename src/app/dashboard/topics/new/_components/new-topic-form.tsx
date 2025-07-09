@@ -64,7 +64,7 @@ export function NewTopicForm({ folders: initialFolders, allTags }: NewTopicFormP
           title: "Topic Created!",
           description: "Your new study topic has been generated.",
         });
-        router.push(`/dashboard/topics/${result.topicId}`);
+        router.push(`/dashboard/topics?topicId=${result.topicId}`);
       } else {
         toast({
           title: "Error Creating Topic",

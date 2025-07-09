@@ -263,22 +263,6 @@ export async function createFolderAction(formData: { name: string; userId: strin
     }
   }
   
-  export async function updateTopicFolderAction(payload: { topicId: string; newFolderId: string | null; newOrder: number }) {
-    if (!adminDb) {
-      return { success: false, error: "Database not configured." };
-    }
-  
-    const { topicId, newFolderId, newOrder } = payload;
-    try {
-      const topicRef = adminDb.collection('topics').doc(topicId);
-      await topicRef.update({ folderId: newFolderId, order: newOrder });
-      return { success: true };
-    } catch (error: any) {
-      console.error("Error updating topic folder:", error);
-      return { success: false, error: `Failed to move topic: ${error.message}` };
-    }
-  }
-
   export async function getReviewDataForTopicsAction(payload: { topicIds: string[] }) {
     if (!adminDb) {
       return { success: false, error: "Database not configured." };
@@ -321,5 +305,65 @@ export async function createFolderAction(formData: { name: string; userId: strin
     } catch (error: any) {
         console.error("Error fetching review data:", error);
         return { success: false, error: `Failed to fetch review data: ${error.message}` };
+    }
+}
+
+export async function getTopicDetailsAction(payload: { topicId: string }) {
+    if (!adminDb) {
+      return { success: false, error: "Database not configured." };
+    }
+    const { topicId } = payload;
+    try {
+        const topicRef = adminDb.collection('topics').doc(topicId);
+        const topicDoc = await topicRef.get();
+
+        if (!topicDoc.exists) {
+            return { success: false, error: "Topic not found." };
+        }
+        
+        const rawData = topicDoc.data()!;
+
+        const flashcardsPromise = topicRef.collection('flashcards').get();
+        const testQuestionsPromise = topicRef.collection('testQuestions').get();
+
+        const [flashcardsSnapshot, testQuestionsSnapshot] = await Promise.all([
+            flashcardsPromise,
+            testQuestionsPromise,
+        ]);
+
+        const flashcards: Flashcard[] = flashcardsSnapshot.docs.map(doc => ({
+            id: doc.id,
+            topicId: doc.data().topicId,
+            question: doc.data().question,
+            answer: doc.data().answer,
+            example: doc.data().example,
+        }));
+
+        const testQuestions: TestQuestion[] = testQuestionsSnapshot.docs.map(doc => ({
+            id: doc.id,
+            topicId: doc.data().topicId,
+            type: doc.data().type,
+            question: doc.data().question,
+            options: doc.data().options || [],
+            answer: doc.data().answer,
+        }));
+
+        const topic: Topic = {
+            id: topicDoc.id,
+            userId: rawData.userId,
+            title: rawData.title,
+            tags: rawData.tags,
+            content: rawData.content,
+            summary: rawData.summary,
+            order: rawData.order,
+            status: rawData.status,
+            createdAt: rawData.createdAt.toDate(),
+            lastStudiedAt: rawData.lastStudiedAt ? rawData.lastStudiedAt.toDate() : undefined,
+            archivedAt: rawData.archivedAt ? rawData.archivedAt.toDate() : undefined,
+        };
+
+        return { success: true, data: { topic, flashcards, testQuestions } };
+    } catch (error: any) {
+        return { success: false, error: error.message };
     }
 }

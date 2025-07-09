@@ -5,7 +5,6 @@ import { CSS } from '@dnd-kit/utilities';
 import type { Topic } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import Link from 'next/link';
 import { GripVertical, MoreHorizontal, Archive, Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -19,33 +18,34 @@ import {
     DropdownMenuTrigger,
   } from '@/components/ui/dropdown-menu';
 
-export function TopicCard({ topic, isOverlay = false, children, dragHandleListeners }: { topic: Topic, isOverlay?: boolean, children?: React.ReactNode, dragHandleListeners?: Record<string, any> }) {
+export function TopicCard({ topic, isOverlay = false, onSelect, children, dragHandleListeners }: { topic: Topic, isOverlay?: boolean, onSelect?: (id: string) => void, children?: React.ReactNode, dragHandleListeners?: Record<string, any> }) {
     return (
-        <div className={cn(
-            "flex items-center justify-between w-full p-3 rounded-lg bg-card/80 backdrop-blur-sm",
-            isOverlay ? "shadow-lg border border-primary" : "border border-white/10"
-        )}>
+        <div 
+            className={cn(
+                "flex items-center justify-between w-full p-3 rounded-lg bg-card/80 backdrop-blur-sm cursor-pointer",
+                isOverlay ? "shadow-lg border border-primary" : "border border-white/10"
+            )}
+            onClick={() => onSelect?.(topic.id)}
+        >
             <div className="flex items-center gap-2 flex-1 min-w-0">
                 {!isOverlay && (
-                    <div {...dragHandleListeners} className="p-1 cursor-grab active:cursor-grabbing">
+                    <div {...dragHandleListeners} className="p-1 cursor-grab active:cursor-grabbing" onClick={(e) => e.stopPropagation()}>
                         <GripVertical className="h-5 w-5 text-muted-foreground" />
                     </div>
                 )}
                 <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">
-                        <Link href={`/dashboard/topics/${topic.id}`} className="hover:text-primary transition-colors">{topic.title}</Link>
-                    </p>
+                    <p className="font-medium truncate hover:text-primary transition-colors">{topic.title}</p>
                     <div className="flex gap-1 mt-1 flex-wrap">
                         {topic.tags.map(tag => <Badge key={tag} variant="secondary" className="border border-white/10">{tag}</Badge>)}
                     </div>
                 </div>
             </div>
-            <div className="flex items-center gap-2 ml-4">
+            <div className="flex items-center gap-2 ml-4" onClick={(e) => e.stopPropagation()}>
                 <p className="text-sm text-muted-foreground hidden md:block">
                     {formatDistanceToNow(topic.createdAt, { addSuffix: true })}
                 </p>
-                <Button variant="outline" size="sm" asChild>
-                    <Link href={`/dashboard/topics/${topic.id}`}>Study</Link>
+                <Button variant="outline" size="sm" onClick={() => onSelect?.(topic.id)}>
+                    Study
                 </Button>
                 {!isOverlay && children}
             </div>
@@ -53,7 +53,7 @@ export function TopicCard({ topic, isOverlay = false, children, dragHandleListen
     );
 }
 
-export function TopicItem({ topic, disabled, onArchive }: { topic: Topic, disabled?: boolean, onArchive: (id: string) => void }) {
+export function TopicItem({ topic, disabled, onArchive, onSelect }: { topic: Topic, disabled?: boolean, onArchive: (id: string) => void, onSelect: (id: string) => void }) {
   const {
     attributes,
     listeners,
@@ -83,7 +83,6 @@ export function TopicItem({ topic, disabled, onArchive }: { topic: Topic, disabl
     }
   };
 
-  // Conditionally apply attributes to prevent hydration mismatch on server.
   const conditionalAttributes = disabled ? {} : attributes;
 
   return (
@@ -93,7 +92,7 @@ export function TopicItem({ topic, disabled, onArchive }: { topic: Topic, disabl
       {...conditionalAttributes}
       className={cn(isDragging && "opacity-50")}
     >
-      <TopicCard topic={topic} dragHandleListeners={listeners}>
+      <TopicCard topic={topic} dragHandleListeners={listeners} onSelect={onSelect}>
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8" disabled={isArchiving}>

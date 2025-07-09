@@ -1,9 +1,6 @@
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { PlusCircle, Archive } from "lucide-react";
 import { adminDb } from "@/lib/firebase-server";
 import type { Topic, Folder } from "@/lib/types";
-import { TopicsList } from "./_components/topics-list";
+import { TopicsView } from "./_components/topics-view";
 
 async function getTopicsAndFolders(userId: string) {
     if (!adminDb) {
@@ -21,7 +18,7 @@ async function getTopicsAndFolders(userId: string) {
         return {
             id: doc.id,
             userId: data.userId,
-            folderId: data.folderId,
+            folderId: data.folderId || null,
             title: data.title,
             tags: data.tags,
             content: data.content,
@@ -45,7 +42,7 @@ async function getTopicsAndFolders(userId: string) {
         };
     });
 
-    topics.sort((a, b) => a.order - b.order);
+    topics.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     folders.sort((a, b) => a.order - b.order);
 
     return { topics, folders };
@@ -56,29 +53,6 @@ export default async function TopicsPage() {
     const { topics, folders } = await getTopicsAndFolders(userId);
 
     return (
-        <div className="space-y-8">
-            <div className="flex items-center justify-between space-y-2">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight font-headline">My Topics</h1>
-                    <p className="text-muted-foreground">Organize your study materials into folders and topics.</p>
-                </div>
-                <div className="flex items-center space-x-2">
-                    <Button variant="outline" asChild>
-                        <Link href="/dashboard/archive">
-                            <Archive className="mr-2 h-4 w-4" />
-                            View Archive
-                        </Link>
-                    </Button>
-                    <Button asChild>
-                        <Link href="/dashboard/topics/new">
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            New Topic
-                        </Link>
-                    </Button>
-                </div>
-            </div>
-
-            <TopicsList initialTopics={topics} initialFolders={folders} />
-        </div>
+        <TopicsView initialTopics={topics} initialFolders={folders} />
     );
 }
