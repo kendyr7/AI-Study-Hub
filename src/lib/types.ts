@@ -1,10 +1,20 @@
+export interface Folder {
+  id: string;
+  userId: string;
+  name: string;
+  order: number;
+  createdAt: Date;
+}
+
 export interface Topic {
   id: string;
   userId: string;
+  folderId: string | null;
   title: string;
   tags: string[];
   content: string;
   summary: string;
+  order: number;
   createdAt: Date;
   lastStudiedAt?: Date;
 }

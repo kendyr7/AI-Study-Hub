@@ -1,23 +1,27 @@
 'use server';
 
 import { adminDb } from '@/lib/firebase';
-import type { Topic, Flashcard, TestQuestion } from '@/lib/types';
+import type { Topic, Flashcard, TestQuestion, Folder } from '@/lib/types';
 import { summarizeText } from '@/ai/flows/summarize-text';
 import { generateFlashcards } from '@/ai/flows/generate-flashcards';
 import { generateTestQuestions } from '@/ai/flows/generate-test';
 
-export async function createTopicAction(formData: { title: string; tags: string; content: string; userId: string; }) {
+export async function createTopicAction(formData: { title: string; tags: string; content: string; userId: string; folderId: string | null }) {
   if (!adminDb) {
     console.error("Firebase Admin not initialized. Cannot create topic.");
     return { success: false, error: "Database not configured. Please set FIREBASE_SERVICE_ACCOUNT_BASE64 in your environment variables." };
   }
   
-  const { title, tags, content, userId } = formData;
+  const { title, tags, content, userId, folderId } = formData;
 
   try {
     const summaryPromise = summarizeText({ text: content });
     const flashcardsPromise = generateFlashcards({ text: content });
     const testPromise = generateTestQuestions({ text: content });
+
+    const topicsInFolderQuery = adminDb.collection('topics').where('userId', '==', userId).where('folderId', '==', folderId);
+    const topicsInFolderSnapshot = await topicsInFolderQuery.count().get();
+    const order = topicsInFolderSnapshot.data().count;
 
     const [summaryResult, flashcardsResult, testResult] = await Promise.all([
       summaryPromise,
@@ -32,6 +36,8 @@ export async function createTopicAction(formData: { title: string; tags: string;
       tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
       content,
       summary: summaryResult.summary,
+      folderId,
+      order,
       createdAt: new Date(),
     };
 
@@ -94,3 +100,74 @@ export async function updateTopicSummaryAction(formData: { topicId: string; summ
     return { success: false, error: `Failed to update summary: ${error.message}` };
   }
 }
+
+export async function createFolderAction(formData: { name: string; userId: string }) {
+    if (!adminDb) {
+      return { success: false, error: "Database not configured." };
+    }
+  
+    const { name, userId } = formData;
+    try {
+      const foldersQuery = adminDb.collection('folders').where('userId', '==', userId);
+      const foldersSnapshot = await foldersQuery.count().get();
+      const order = foldersSnapshot.data().count;
+  
+      const folderRef = adminDb.collection('folders').doc();
+      const newFolder: Omit<Folder, 'id' | 'createdAt'> & { createdAt: admin.firestore.FieldValue } = {
+        userId,
+        name,
+        order,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
+      await folderRef.set(newFolder);
+      
+      const createdFolder: Folder = {
+        id: folderRef.id,
+        userId,
+        name,
+        order,
+        createdAt: new Date()
+      };
+
+      return { success: true, folder: createdFolder };
+    } catch (error: any) {
+      console.error("Error creating folder:", error);
+      return { success: false, error: `Failed to create folder: ${error.message}` };
+    }
+  }
+  
+  export async function updateItemsOrderAction(payload: { items: { id: string; order: number }[]; type: 'topics' | 'folders' }) {
+    if (!adminDb) {
+      return { success: false, error: "Database not configured." };
+    }
+  
+    const { items, type } = payload;
+    try {
+      const batch = adminDb.batch();
+      items.forEach(item => {
+        const docRef = adminDb.collection(type).doc(item.id);
+        batch.update(docRef, { order: item.order });
+      });
+      await batch.commit();
+      return { success: true };
+    } catch (error: any) {
+      console.error(`Error updating ${type} order:`, error);
+      return { success: false, error: `Failed to update order: ${error.message}` };
+    }
+  }
+  
+  export async function updateTopicFolderAction(payload: { topicId: string; newFolderId: string | null; newOrder: number }) {
+    if (!adminDb) {
+      return { success: false, error: "Database not configured." };
+    }
+  
+    const { topicId, newFolderId, newOrder } = payload;
+    try {
+      const topicRef = adminDb.collection('topics').doc(topicId);
+      await topicRef.update({ folderId: newFolderId, order: newOrder });
+      return { success: true };
+    } catch (error: any) {
+      console.error("Error updating topic folder:", error);
+      return { success: false, error: `Failed to move topic: ${error.message}` };
+    }
+  }
