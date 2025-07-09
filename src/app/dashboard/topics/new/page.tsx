@@ -2,21 +2,18 @@ import { adminDb } from '@/lib/firebase';
 import type { Folder } from '@/lib/types';
 import { NewTopicForm } from './_components/new-topic-form';
 
-async function getFolders(userId: string): Promise<Folder[]> {
+async function getNewTopicPageData(userId: string): Promise<{folders: Folder[], allTags: string[]}> {
   if (!adminDb) {
     console.warn("Firebase Admin not initialized, folders list will be empty.");
-    return [];
+    return { folders: [], allTags: [] };
   }
 
-  const foldersSnapshot = await adminDb.collection('folders')
-    .where('userId', '==', userId)
-    .get();
+  const foldersPromise = adminDb.collection('folders').where('userId', '==', userId).get();
+  const topicsPromise = adminDb.collection('topics').where('userId', '==', userId).where('status', '==', 'active').get();
+
+  const [foldersSnapshot, topicsSnapshot] = await Promise.all([foldersPromise, topicsPromise]);
   
-  if (foldersSnapshot.empty) {
-    return [];
-  }
-  
-  const folders = foldersSnapshot.docs.map(doc => {
+  const folders: Folder[] = foldersSnapshot.docs.map(doc => {
     const data = doc.data();
     return {
       id: doc.id,
@@ -29,13 +26,16 @@ async function getFolders(userId: string): Promise<Folder[]> {
 
   // Sort in application code to avoid needing a composite index
   folders.sort((a, b) => a.order - b.order);
-  return folders;
+
+  const allTags = [...new Set(topicsSnapshot.docs.flatMap(doc => doc.data().tags || []))].sort();
+
+  return { folders, allTags };
 }
 
 export default async function NewTopicPage() {
     // In a real app, you'd get this from auth
     const userId = 'user-123';
-    const folders = await getFolders(userId);
+    const { folders, allTags } = await getNewTopicPageData(userId);
 
   return (
     <div className="space-y-8">
@@ -47,7 +47,7 @@ export default async function NewTopicPage() {
           </p>
         </div>
       </div>
-      <NewTopicForm folders={folders} />
+      <NewTopicForm folders={folders} allTags={allTags} />
     </div>
   );
 }

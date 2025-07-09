@@ -20,9 +20,10 @@ import type { Folder } from '@/lib/types';
 
 interface NewFolderDialogProps {
   onFolderCreated: (newFolder: Folder) => void;
+  children?: React.ReactNode;
 }
 
-export function NewFolderDialog({ onFolderCreated }: NewFolderDialogProps) {
+export function NewFolderDialog({ onFolderCreated, children }: NewFolderDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -50,10 +51,12 @@ export function NewFolderDialog({ onFolderCreated }: NewFolderDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
-          <FolderPlus className="mr-2 h-4 w-4" />
-          New Folder
-        </Button>
+        {children || (
+            <Button variant="outline">
+              <FolderPlus className="mr-2 h-4 w-4" />
+              New Folder
+            </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
