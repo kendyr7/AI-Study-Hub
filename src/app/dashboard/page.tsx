@@ -128,8 +128,8 @@ export default async function DashboardPage() {
               {weakTopics.length > 0 ? (
                   <>
                       <ul className="space-y-2 text-sm text-muted-foreground">
-                      {weakTopics.map(topic => (
-                          <li key={topic} className="flex items-center gap-2">
+                      {weakTopics.map((topic, index) => (
+                          <li key={`${topic}-${index}`} className="flex items-center gap-2">
                               <ArrowRight className="h-4 w-4 text-primary" />
                               <span>{topic}</span>
                           </li>
