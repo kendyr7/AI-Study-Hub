@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { auth, storage } from '@/lib/firebase-client';
+import { useState, useEffect } from 'react';
+import { auth } from '@/lib/firebase-client';
 import type { User } from 'firebase/auth';
 import { updateProfile } from 'firebase/auth';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,15 +13,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { ChangePasswordDialog } from './change-password-dialog';
+import { AvatarSelectionDialog } from './avatar-selection-dialog';
 
 export function ProfileClientPage() {
     const { toast } = useToast();
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
-    const [isUploading, setIsUploading] = useState(false);
     const [displayName, setDisplayName] = useState('');
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
 
     useEffect(() => {
         if (!auth) {
@@ -51,38 +50,6 @@ export function ProfileClientPage() {
         }
         return name[0]?.toUpperCase() || 'U';
     }
-
-    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file && user && storage && auth?.currentUser) {
-            setIsUploading(true);
-            const photoRef = storageRef(storage, `profile-photos/${user.uid}/${file.name}`);
-            
-            uploadBytes(photoRef, file)
-                .then(snapshot => getDownloadURL(snapshot.ref))
-                .then(url => {
-                    if (auth.currentUser) {
-                        return updateProfile(auth.currentUser, { photoURL: url });
-                    }
-                    throw new Error("User not found");
-                })
-                .then(() => {
-                    toast({ title: "Photo updated successfully!" });
-                    // Force a reload of user to get new photoURL
-                    return auth.currentUser?.reload();
-                })
-                .then(() => {
-                    setUser(auth.currentUser ? { ...auth.currentUser } : null);
-                })
-                .catch(error => {
-                    console.error("Error uploading photo: ", error);
-                    toast({ title: "Error uploading photo", description: error.message, variant: "destructive" });
-                })
-                .finally(() => {
-                    setIsUploading(false);
-                });
-        }
-    };
     
     const handleUpdateProfile = async () => {
         if (!user || !auth?.currentUser) return;
@@ -102,6 +69,24 @@ export function ProfileClientPage() {
             setIsSaving(false);
         }
     };
+    
+    const handleAvatarSelect = async (url: string) => {
+        if (!user || !auth?.currentUser) return;
+        
+        setIsSaving(true);
+        try {
+            await updateProfile(auth.currentUser, { photoURL: url });
+            toast({ title: "Avatar updated!" });
+            await auth.currentUser.reload();
+            setUser({ ...auth.currentUser });
+        } catch (error: any) {
+            console.error("Error updating avatar:", error);
+            toast({ title: "Error updating avatar", description: error.message, variant: "destructive" });
+        } finally {
+            setIsSaving(false);
+            setIsAvatarDialogOpen(false);
+        }
+    }
 
 
     if (loading) {
@@ -172,20 +157,12 @@ export function ProfileClientPage() {
                             <AvatarImage src={user.photoURL || ''} alt="User Avatar" />
                             <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
                         </Avatar>
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handlePhotoChange}
-                            accept="image/png, image/jpeg, image/webp"
-                            className="hidden"
-                        />
                          <Button 
                             variant="outline" 
-                            onClick={() => fileInputRef.current?.click()} 
-                            disabled={isUploading || !storage}
+                            onClick={() => setIsAvatarDialogOpen(true)} 
+                            disabled={isSaving}
                         >
-                            {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            Change Photo
+                            Change Avatar
                         </Button>
                     </div>
                     <div className="grid gap-2">
@@ -205,6 +182,14 @@ export function ProfileClientPage() {
                     </Button>
                 </CardFooter>
             </Card>
+
+            <AvatarSelectionDialog
+                open={isAvatarDialogOpen}
+                onOpenChange={setIsAvatarDialogOpen}
+                currentAvatar={user.photoURL}
+                onSelect={handleAvatarSelect}
+                isSaving={isSaving}
+            />
         </div>
     );
 }
