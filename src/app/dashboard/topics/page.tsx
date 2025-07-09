@@ -78,8 +78,7 @@ export default async function TopicsPage() {
                         {topics.map((topic) => (
                             <TableRow key={topic.id}>
                                 <TableCell className="font-medium">
-                                    {/* This link will eventually go to /dashboard/topics/[topicId] */}
-                                    <Link href="#" className="hover:underline">{topic.title}</Link>
+                                    <Link href={`/dashboard/topics/${topic.id}`} className="hover:underline">{topic.title}</Link>
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex gap-1">
@@ -91,7 +90,7 @@ export default async function TopicsPage() {
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <Button variant="outline" size="sm" asChild>
-                                        <Link href="#">Study</Link>
+                                        <Link href={`/dashboard/topics/${topic.id}`}>Study</Link>
                                     </Button>
                                 </TableCell>
                             </TableRow>

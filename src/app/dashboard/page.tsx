@@ -173,7 +173,7 @@ function RecentTopicsTable({ topics }: { topics: Topic[] }) {
         {topics.map((topic) => (
             <TableRow key={topic.id}>
                 <TableCell className="font-medium">
-                    <Link href="#" className="hover:underline">{topic.title}</Link>
+                    <Link href={`/dashboard/topics/${topic.id}`} className="hover:underline">{topic.title}</Link>
                 </TableCell>
                 <TableCell>
                     <div className="flex gap-1">

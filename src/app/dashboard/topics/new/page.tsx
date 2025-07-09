@@ -37,13 +37,12 @@ export default function NewTopicPage() {
       
       const result = await createTopicAction({ title, tags, content, userId });
 
-      if (result.success) {
+      if (result.success && result.topicId) {
         toast({
           title: "Topic Created!",
           description: "Your new study topic has been generated.",
         });
-        // We will eventually redirect to the topic page, for now, redirect to the list.
-        router.push('/dashboard/topics');
+        router.push(`/dashboard/topics/${result.topicId}`);
       } else {
         toast({
           title: "Error Creating Topic",
@@ -51,11 +50,11 @@ export default function NewTopicPage() {
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to generate topic:", error);
       toast({
-        title: "Error",
-        description: "A network error occurred. Please try again.",
+        title: "Error Creating Topic",
+        description: error.message || "A network error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
