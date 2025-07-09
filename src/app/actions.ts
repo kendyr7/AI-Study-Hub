@@ -7,6 +7,28 @@ import { summarizeText } from '@/ai/flows/summarize-text';
 import { generateFlashcards } from '@/ai/flows/generate-flashcards';
 import { generateTestQuestions } from '@/ai/flows/generate-test';
 
+async function retry<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
+  let lastError: any;
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      if (i < retries - 1) {
+        // Only retry on 503 errors
+        if (error.message && error.message.includes('503')) {
+           await new Promise(resolve => setTimeout(resolve, delay * (i + 1))); // Exponential backoff
+        } else {
+            // Don't retry on other errors (e.g., safety violations)
+            break;
+        }
+      }
+    }
+  }
+  throw lastError;
+}
+
+
 export async function createTopicAction(formData: { title: string; tags: string; content: string; userId: string; folderId: string | null }) {
   if (!adminDb) {
     console.error("Firebase Admin not initialized. Cannot create topic.");
@@ -16,9 +38,9 @@ export async function createTopicAction(formData: { title: string; tags: string;
   const { title, tags, content, userId, folderId } = formData;
 
   try {
-    const summaryPromise = summarizeText({ text: content });
-    const flashcardsPromise = generateFlashcards({ text: content });
-    const testPromise = generateTestQuestions({ text: content });
+    const summaryPromise = retry(() => summarizeText({ text: content }));
+    const flashcardsPromise = retry(() => generateFlashcards({ text: content }));
+    const testPromise = retry(() => generateTestQuestions({ text: content }));
 
     const topicsInFolderQuery = adminDb.collection('topics').where('userId', '==', userId).where('folderId', '==', folderId);
     const topicsInFolderSnapshot = await topicsInFolderQuery.count().get();
@@ -78,6 +100,10 @@ export async function createTopicAction(formData: { title: string; tags: string;
     
     if (errorMessage.includes('SAFETY')) {
         return { success: false, error: "Content moderation error: The provided text could not be processed due to safety policies. Please revise your input." };
+    }
+    
+    if (errorMessage.includes('503')) {
+        return { success: false, error: "The AI model is currently overloaded. Please try again in a few moments." };
     }
 
     return { success: false, error: `Failed to create topic: ${errorMessage}` };
@@ -145,6 +171,10 @@ async function deleteCollection(collectionRef: admin.firestore.CollectionReferen
 }
 
 async function deleteQueryBatch(query: admin.firestore.Query, resolve: (value?: unknown) => void) {
+    if (!adminDb) {
+      resolve();
+      return;
+    }
     const snapshot = await query.get();
 
     const batchSize = snapshot.size;
@@ -153,7 +183,7 @@ async function deleteQueryBatch(query: admin.firestore.Query, resolve: (value?: 
         return;
     }
 
-    const batch = adminDb!.batch();
+    const batch = adminDb.batch();
     snapshot.docs.forEach((doc) => {
         batch.delete(doc.ref);
     });
