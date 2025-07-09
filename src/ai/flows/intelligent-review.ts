@@ -23,14 +23,15 @@ export type IntelligentReviewInput = z.infer<typeof IntelligentReviewInputSchema
 const FlashcardSchema = z.object({
   question: z.string().describe('The flashcard question.'),
   answer: z.string().describe('The flashcard answer.'),
-  topic: z.string().describe('The topic of the flashcard.'),
+  example: z.string().describe('An example for the flashcard.'),
+  topicName: z.string().describe('The topic name of the flashcard.'),
 });
 
 const TestQuestionSchema = z.object({
   question: z.string().describe('The test question.'),
   answer: z.string().describe('The correct answer to the test question.'),
   options: z.array(z.string()).describe('The possible answers to the test question.'),
-  topic: z.string().describe('The topic of the test question.'),
+  topicName: z.string().describe('The topic name of the test question.'),
 });
 
 const IntelligentReviewOutputSchema = z.object({
@@ -75,12 +76,12 @@ const getFlashcardsByTopic = ai.defineTool({
   name: 'getFlashcardsByTopic',
   description: 'Retrieves flashcards for a specific topic name.',
   inputSchema: z.object({
-    topic: z.string().describe('The topic name to retrieve flashcards for.'),
+    topicName: z.string().describe('The topic name to retrieve flashcards for.'),
     userId: z.string().describe('The ID of the user.'),
     count: z.number().describe('The maximum number of flashcards to retrieve.'),
   }),
   outputSchema: z.array(FlashcardSchema).describe('An array of flashcards for the given topic.'),
-}, async ({ topic: topicName, userId, count }) => {
+}, async ({ topicName, userId, count }) => {
     if (!adminDb) {
       console.warn("Firebase Admin not initialized, cannot get flashcards.");
       return [];
@@ -102,7 +103,8 @@ const getFlashcardsByTopic = ai.defineTool({
         return {
             question: data.question,
             answer: data.answer,
-            topic: topicName
+            example: data.example,
+            topicName: topicName
         };
     });
 });
@@ -111,12 +113,12 @@ const getTestQuestionsByTopic = ai.defineTool({
   name: 'getTestQuestionsByTopic',
   description: 'Retrieves test questions for a specific topic name.',
   inputSchema: z.object({
-    topic: z.string().describe('The topic name to retrieve test questions for.'),
+    topicName: z.string().describe('The topic name to retrieve test questions for.'),
     userId: z.string().describe('The ID of the user.'),
     count: z.number().describe('The maximum number of test questions to retrieve.'),
   }),
   outputSchema: z.array(TestQuestionSchema).describe('An array of test questions for the given topic.'),
-}, async ({ topic: topicName, userId, count }) => {
+}, async ({ topicName, userId, count }) => {
     if (!adminDb) {
       console.warn("Firebase Admin not initialized, cannot get test questions.");
       return [];
@@ -139,7 +141,7 @@ const getTestQuestionsByTopic = ai.defineTool({
             question: data.question,
             answer: data.answer,
             options: data.options || [],
-            topic: topicName,
+            topicName: topicName,
         };
     });
 });
@@ -155,30 +157,37 @@ const intelligentReviewFlow = ai.defineFlow({
       .sort(([, scoreA], [, scoreB]) => Number(scoreA) - Number(scoreB))
       .map(([topic]) => topic);
 
-    const flashcards: { question: string, answer: string, topic: string }[] = [];
-    const testQuestions: { question: string, answer: string, options: string[], topic: string }[] = [];
+    if (sortedTopics.length === 0) {
+        return { flashcards: [], testQuestions: [] };
+    }
 
-    for (const topic of sortedTopics) {
+    const flashcards: z.infer<typeof FlashcardSchema>[] = [];
+    const testQuestions: z.infer<typeof TestQuestionSchema>[] = [];
+
+    // Distribute the fetch count across the weakest topics
+    const topicsToSampleFrom = sortedTopics.slice(0, 3); // Focus on the 3 weakest topics
+
+    for (const topicName of topicsToSampleFrom) {
       if (flashcards.length < input.numFlashcards) {
-        const numToFetch = input.numFlashcards - flashcards.length;
-        const topicFlashcards = await getFlashcardsByTopic({topic, userId: input.userId, count: numToFetch});
-        flashcards.push(...topicFlashcards);
+        const numToFetch = Math.ceil((input.numFlashcards - flashcards.length) / topicsToSampleFrom.length);
+        if (numToFetch > 0) {
+            const topicFlashcards = await getFlashcardsByTopic({topicName, userId: input.userId, count: numToFetch});
+            flashcards.push(...topicFlashcards);
+        }
       }
 
       if (testQuestions.length < input.numTestQuestions) {
-        const numToFetch = input.numTestQuestions - testQuestions.length;
-        const topicTestQuestions = await getTestQuestionsByTopic({topic, userId: input.userId, count: numToFetch});
-        testQuestions.push(...topicTestQuestions);
-      }
-
-      if (flashcards.length >= input.numFlashcards && testQuestions.length >= input.numTestQuestions) {
-        break;
+        const numToFetch = Math.ceil((input.numTestQuestions - testQuestions.length) / topicsToSampleFrom.length);
+        if (numToFetch > 0) {
+            const topicTestQuestions = await getTestQuestionsByTopic({topicName, userId: input.userId, count: numToFetch});
+            testQuestions.push(...topicTestQuestions);
+        }
       }
     }
 
     return {
-      flashcards,
-      testQuestions,
+      flashcards: flashcards.slice(0, input.numFlashcards),
+      testQuestions: testQuestions.slice(0, input.numTestQuestions),
     };
   }
 );

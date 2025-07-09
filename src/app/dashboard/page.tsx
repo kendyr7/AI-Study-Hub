@@ -44,7 +44,17 @@ async function getDashboardData(userId: string) {
     // Placeholder data for now
     const flashcardsStudied = 0;
     const avgTestScore = 'N/A';
-    const weakTopics: string[] = []; // This will come from intelligent review later
+    
+    // Simulate performance scores to find weak topics
+    const weakTopics = allTopics
+        .map(topic => ({
+            name: topic.title,
+            // Assign a random score, lower is weaker.
+            score: Math.floor(Math.random() * 60) + 20, // Score between 20 and 80
+        }))
+        .sort((a, b) => a.score - b.score)
+        .slice(0, 3)
+        .map(t => t.name);
 
     return { totalTopics, flashcardsStudied, avgTestScore, recentTopics, weakTopics };
 }
@@ -129,7 +139,12 @@ export default async function DashboardPage() {
                       </Button>
                   </>
               ) : (
-                  <p className="text-sm text-muted-foreground">Study some topics and take some tests to get personalized review sessions!</p>
+                <>
+                  <p className="text-sm text-muted-foreground">You don&apos;t have any topics yet. Create one to get started!</p>
+                   <Button className="w-full mt-6" variant="default" asChild>
+                        <Link href="/dashboard/topics/new">Create a Topic</Link>
+                    </Button>
+                </>
               )}
             </CardContent>
           </Card>

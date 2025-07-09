@@ -190,3 +190,48 @@ export async function createFolderAction(formData: { name: string; userId: strin
       return { success: false, error: `Failed to move topic: ${error.message}` };
     }
   }
+
+  export async function getReviewDataForTopicsAction(payload: { topicIds: string[] }) {
+    if (!adminDb) {
+      return { success: false, error: "Database not configured." };
+    }
+
+    const { topicIds } = payload;
+
+    try {
+        const allFlashcards: (Flashcard & { topicName: string })[] = [];
+        const allTestQuestions: (TestQuestion & { topicName: string })[] = [];
+
+        for (const topicId of topicIds) {
+            const topicRef = adminDb.collection('topics').doc(topicId);
+            const topicDoc = await topicRef.get();
+            if (!topicDoc.exists) continue;
+
+            const topicName = topicDoc.data()?.title || 'Untitled Topic';
+            
+            const flashcardsPromise = topicRef.collection('flashcards').get();
+            const testQuestionsPromise = topicRef.collection('testQuestions').get();
+
+            const [flashcardsSnapshot, testQuestionsSnapshot] = await Promise.all([
+                flashcardsPromise,
+                testQuestionsPromise
+            ]);
+
+            flashcardsSnapshot.docs.forEach(doc => {
+                const data = doc.data() as Omit<Flashcard, 'id'>;
+                allFlashcards.push({ id: doc.id, ...data, topicName });
+            });
+
+            testQuestionsSnapshot.docs.forEach(doc => {
+                const data = doc.data() as Omit<TestQuestion, 'id'>;
+                allTestQuestions.push({ id: doc.id, ...data, topicName });
+            });
+        }
+        
+        return { success: true, flashcards: allFlashcards, testQuestions: allTestQuestions };
+
+    } catch (error: any) {
+        console.error("Error fetching review data:", error);
+        return { success: false, error: `Failed to fetch review data: ${error.message}` };
+    }
+}
