@@ -64,8 +64,15 @@ export async function createTopicAction(formData: { title: string; tags: string;
     await batch.commit();
 
     return { success: true, topicId: topicRef.id };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating topic:", error);
-    return { success: false, error: "Failed to create topic." };
+    const errorMessage = error.message || "An unknown error occurred.";
+    
+    // Provide more specific feedback for common AI errors
+    if (errorMessage.includes('SAFETY')) {
+        return { success: false, error: "Content moderation error: The provided text could not be processed due to safety policies. Please revise your input." };
+    }
+
+    return { success: false, error: `Failed to create topic: ${errorMessage}` };
   }
 }
