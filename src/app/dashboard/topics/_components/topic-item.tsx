@@ -83,11 +83,14 @@ export function TopicItem({ topic, disabled, onArchive }: { topic: Topic, disabl
     }
   };
 
+  // Conditionally apply attributes to prevent hydration mismatch on server.
+  const conditionalAttributes = disabled ? {} : attributes;
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
+      {...conditionalAttributes}
       className={cn(isDragging && "opacity-50")}
     >
       <TopicCard topic={topic} dragHandleListeners={listeners}>

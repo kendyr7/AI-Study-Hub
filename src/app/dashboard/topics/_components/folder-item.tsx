@@ -41,8 +41,11 @@ export function FolderItem({ folder, children, disabled }: { folder: Folder, chi
     transition,
   };
 
+  // Conditionally apply attributes to prevent hydration mismatch on server.
+  const conditionalAttributes = disabled ? {} : attributes;
+
   return (
-    <div ref={setNodeRef} style={style} {...attributes} className={cn(isDragging && "opacity-50")}>
+    <div ref={setNodeRef} style={style} {...conditionalAttributes} className={cn(isDragging && "opacity-50")}>
        <FolderContainer id={folder.id}>
         <AccordionItem value={folder.id} className="border-b-0" ref={setDroppableRef}>
             <AccordionTrigger className="hover:no-underline p-4 [&[data-state=open]>div>svg]:rotate-180">
