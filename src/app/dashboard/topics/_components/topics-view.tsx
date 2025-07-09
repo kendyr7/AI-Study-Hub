@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -9,7 +10,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { updateItemsOrderAction } from '@/app/actions';
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FolderPlus, Inbox, PlusCircle, Archive, Folder as FolderIcon, Settings } from 'lucide-react';
@@ -223,6 +224,11 @@ export function TopicsView({ initialTopics, initialFolders }: { initialTopics: T
         const filtered = topics.filter(t => t.folderId === currentFolder);
         return filtered.sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
     }, [selectedFolderId, topics]);
+    
+    const selectedTopic = useMemo(() => {
+        if (!selectedTopicId) return null;
+        return topics.find(t => t.id === selectedTopicId);
+    }, [selectedTopicId, topics]);
 
     const getTopicCountForFolder = (folderId: string) => {
         return topics.filter(topic => topic.folderId === folderId).length;
@@ -290,7 +296,12 @@ export function TopicsView({ initialTopics, initialFolders }: { initialTopics: T
                 
                 <Sheet open={!!selectedTopicId} onOpenChange={(open) => !open && onTopicClose()}>
                     <SheetContent side="right" className="w-full sm:max-w-xl p-0 border-l-white/10 bg-background/90 backdrop-blur-xl">
-                        {selectedTopicId && <TopicDetailView topicId={selectedTopicId} onClose={onTopicClose} onTopicUpdate={handleTopicUpdate} />}
+                        {selectedTopicId && (
+                            <>
+                                <SheetTitle className="sr-only">{selectedTopic?.title || 'Topic Details'}</SheetTitle>
+                                <TopicDetailView topicId={selectedTopicId} onClose={onTopicClose} onTopicUpdate={handleTopicUpdate} />
+                            </>
+                        )}
                     </SheetContent>
                 </Sheet>
             </div>
