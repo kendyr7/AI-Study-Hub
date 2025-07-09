@@ -24,7 +24,9 @@ import { usePathname } from 'next/navigation';
 
 function NavLink({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
     const pathname = usePathname();
-    const isActive = pathname === href;
+    const isActive = href === '/dashboard' 
+        ? pathname === href 
+        : pathname.startsWith(href);
     return (
         <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={isActive} tooltip={label}>
@@ -38,6 +40,8 @@ function NavLink({ href, icon, label }: { href: string; icon: React.ReactNode; l
 }
 
 export function AppSidebar() {
+  const pathname = usePathname();
+
   return (
     <Sidebar variant="floating" collapsible="icon">
       <SidebarHeader>
@@ -56,10 +60,14 @@ export function AppSidebar() {
         <SidebarMenu>
           <NavLink href="/dashboard/settings" icon={<Settings />} label="Settings" />
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Profile">
+            <SidebarMenuButton 
+                asChild 
+                tooltip="Profile" 
+                isActive={pathname.startsWith('/dashboard/profile')}
+            >
                 <Link href="/dashboard/profile">
                     <Avatar className="h-7 w-7">
-                        <AvatarImage src="https://placehold.co/100x100.png" alt="@shadcn" data-ai-hint="user avatar" />
+                        <AvatarImage src="https://placehold.co/100x100.png" alt="User Avatar" data-ai-hint="user avatar" />
                         <AvatarFallback>U</AvatarFallback>
                     </Avatar>
                     <span>User Profile</span>
