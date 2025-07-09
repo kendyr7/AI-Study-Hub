@@ -1,3 +1,4 @@
+
 'use server';
 
 import admin from 'firebase-admin';
@@ -42,7 +43,10 @@ export async function createTopicAction(formData: { title: string; tags: string;
     const flashcardsPromise = retry(() => generateFlashcards({ text: content }));
     const testPromise = retry(() => generateTestQuestions({ text: content }));
 
-    const topicsInFolderQuery = adminDb.collection('topics').where('userId', '==', userId).where('folderId', '==', folderId);
+    const topicsInFolderQuery = adminDb.collection('topics')
+        .where('userId', '==', userId)
+        .where('folderId', '==', folderId)
+        .where('status', '==', 'active');
     const topicsInFolderSnapshot = await topicsInFolderQuery.count().get();
     const order = topicsInFolderSnapshot.data().count;
 
