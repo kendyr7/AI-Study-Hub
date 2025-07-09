@@ -19,7 +19,7 @@ import {
     DropdownMenuTrigger,
   } from '@/components/ui/dropdown-menu';
 
-export function TopicCard({ topic, isOverlay = false, children }: { topic: Topic, isOverlay?: boolean, children?: React.ReactNode }) {
+export function TopicCard({ topic, isOverlay = false, children, dragHandleListeners }: { topic: Topic, isOverlay?: boolean, children?: React.ReactNode, dragHandleListeners?: Record<string, any> }) {
     return (
         <div className={cn(
             "flex items-center justify-between w-full p-3 rounded-lg bg-card/80 backdrop-blur-sm",
@@ -27,7 +27,7 @@ export function TopicCard({ topic, isOverlay = false, children }: { topic: Topic
         )}>
             <div className="flex items-center gap-2 flex-1 min-w-0">
                 {!isOverlay && (
-                    <div className="p-1 cursor-grab active:cursor-grabbing">
+                    <div {...dragHandleListeners} className="p-1 cursor-grab active:cursor-grabbing">
                         <GripVertical className="h-5 w-5 text-muted-foreground" />
                     </div>
                 )}
@@ -88,10 +88,9 @@ export function TopicItem({ topic, disabled, onArchive }: { topic: Topic, disabl
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
       className={cn(isDragging && "opacity-50")}
     >
-      <TopicCard topic={topic}>
+      <TopicCard topic={topic} dragHandleListeners={listeners}>
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8" disabled={isArchiving}>

@@ -29,7 +29,6 @@ export function FolderItem({ folder, children, disabled }: { folder: Folder, chi
     attributes,
     listeners,
     setNodeRef,
-    setActivatorNodeRef,
     transform,
     transition,
     isDragging,
@@ -48,7 +47,7 @@ export function FolderItem({ folder, children, disabled }: { folder: Folder, chi
         <AccordionItem value={folder.id} className="border-b-0" ref={setDroppableRef}>
             <AccordionTrigger className="hover:no-underline p-4 [&[data-state=open]>div>svg]:rotate-180">
                 <div className="flex items-center gap-2 w-full">
-                    <button ref={setActivatorNodeRef} {...listeners} className="p-1 cursor-grab active:cursor-grabbing">
+                    <button {...listeners} onPointerDown={(e) => e.stopPropagation()} className="p-1 cursor-grab active:cursor-grabbing">
                         <GripVertical className="h-5 w-5 text-muted-foreground" />
                     </button>
                     <h3 className="font-semibold text-lg">{folder.name}</h3>
