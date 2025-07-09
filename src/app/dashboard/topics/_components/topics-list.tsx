@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -44,6 +45,11 @@ export function TopicsList({ initialTopics, initialFolders }: { initialTopics: T
   const [folders, setFolders] = useState<Folder[]>(initialFolders);
   const [topics, setTopics] = useState<Topic[]>(initialTopics);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -253,7 +259,7 @@ export function TopicsList({ initialTopics, initialFolders }: { initialTopics: T
           </FolderContainer>
         </div>
         
-        {createPortal(
+        {isMounted ? createPortal(
             <DragOverlay dropAnimation={null}>
                 {activeItem ? (
                     'name' in activeItem ? 
@@ -266,7 +272,7 @@ export function TopicsList({ initialTopics, initialFolders }: { initialTopics: T
                 ) : null}
             </DragOverlay>,
             document.body
-        )}
+        ) : null}
       </DndContext>
     </>
   );
