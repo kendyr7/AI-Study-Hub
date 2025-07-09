@@ -54,8 +54,8 @@ function DraggableFlashcard({
     <div
       ref={setNodeRef}
       style={style}
-      {...listeners}
       {...attributes}
+      {...listeners}
       className={cn(
         'absolute w-full h-full transition-all duration-300 ease-in-out',
         isDragging ? 'cursor-grabbing' : isTopCard ? 'cursor-grab' : ''
@@ -75,11 +75,11 @@ function DraggableFlashcard({
             className={`relative w-full h-full transition-transform duration-700 ease-in-out`}
             style={{ transformStyle: 'preserve-3d', transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
         >
-            <Card className="absolute w-full h-full flex flex-col items-center justify-center p-6 text-center" style={{ backfaceVisibility: 'hidden', opacity: frontOpacity }}>
+            <Card className="absolute w-full h-full flex flex-col items-center justify-center p-6 text-center bg-card" style={{ backfaceVisibility: 'hidden', opacity: frontOpacity }}>
                 <p className="text-sm text-muted-foreground mb-2">Question</p>
                 <p className="text-lg font-semibold sm:text-xl">{card.question}</p>
             </Card>
-            <Card className="absolute w-full h-full flex flex-col items-center justify-center p-6 text-center" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+            <Card className="absolute w-full h-full flex flex-col items-center justify-center p-6 text-center bg-card" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
                 <p className="text-sm text-muted-foreground mb-2">Answer</p>
                 <p className="text-lg font-semibold sm:text-xl">{card.answer}</p>
                 {card.example && (
