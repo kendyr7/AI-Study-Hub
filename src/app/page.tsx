@@ -13,14 +13,14 @@ export default function LandingPage() {
           <Button variant="ghost" asChild>
             <Link href="/login">Login</Link>
           </Button>
-          <Button asChild className='bg-white text-black hover:bg-gray-200 hover:shadow-none'>
+          <Button asChild>
             <Link href="/signup">Get Started <ArrowRight className="ml-2" /></Link>
           </Button>
         </nav>
       </header>
       <main className="flex-grow">
         <section className="container mx-auto px-4 sm:px-6 lg:px-8 text-center py-16 sm:py-20 md:py-28">
-          <div className="inline-flex items-center rounded-lg bg-muted px-3 py-1 text-sm mb-6 border border-white/10">
+          <div className="inline-flex items-center rounded-lg bg-muted px-3 py-1 text-sm mb-6 border">
             <Sparkles className="h-4 w-4 mr-2 text-primary" />
             Powered by Gemini
           </div>

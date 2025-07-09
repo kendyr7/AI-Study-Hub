@@ -29,7 +29,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <div className="absolute top-0 left-0 -z-50 h-screen w-screen bg-background">
-            <div className="absolute inset-0 -z-40 h-full w-full bg-[radial-gradient(ellipse_100%_40%_at_50%_60%,hsl(var(--primary)/0.1),transparent)]"></div>
+             <div className="absolute inset-0 -z-40 h-full w-full bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,hsl(var(--primary)/0.15),transparent)]"></div>
           </div>
           {children}
           <Toaster />
