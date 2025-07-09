@@ -93,9 +93,9 @@ export function UserAuthForm({ className, signup = false, ...props }: UserAuthFo
         await signInWithEmailAndPassword(auth, values.email, values.password);
       }
       router.push('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
         let errorMessage = "An unexpected error occurred. Please try again.";
-        if (error instanceof AuthError) {
+        if (error?.code) {
           errorMessage = handleAuthError(error);
         } else if (error instanceof Error) {
             errorMessage = error.message;
@@ -119,9 +119,9 @@ export function UserAuthForm({ className, signup = false, ...props }: UserAuthFo
       }
       await signInWithPopup(auth, provider);
       router.push('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
         let errorMessage = "An unexpected error occurred. Please try again.";
-        if (error instanceof AuthError) {
+        if (error?.code) {
           errorMessage = handleAuthError(error);
         } else if (error instanceof Error) {
             errorMessage = error.message;
