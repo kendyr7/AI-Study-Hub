@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookText, Copy, TestTube } from 'lucide-react';
 import { FlashcardViewer } from './_components/flashcard-viewer';
 import { PracticeTest } from './_components/practice-test';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 async function getTopicDetails(topicId: string) {
     if (!adminDb) {
@@ -91,10 +93,14 @@ export default async function TopicDetailsPage({ params }: { params: { topicId: 
                     <Card>
                         <CardHeader>
                             <CardTitle>AI-Generated Summary</CardTitle>
-                            <CardDescription>A concise overview of your study material.</CardDescription>
+                            <CardDescription>A detailed overview of your study material, with key concepts highlighted.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <p className="whitespace-pre-wrap leading-relaxed">{topic.summary}</p>
+                            <div className="prose dark:prose-invert max-w-none">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    {topic.summary}
+                                </ReactMarkdown>
+                            </div>
                         </CardContent>
                     </Card>
                 </TabsContent>

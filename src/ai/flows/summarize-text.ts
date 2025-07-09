@@ -17,12 +17,20 @@ const SummarizeTextInputSchema = z.object({
 export type SummarizeTextInput = z.infer<typeof SummarizeTextInputSchema>;
 
 const SummarizeTextOutputSchema = z.object({
-  summary: z.string().describe('The concise summary of the input text.'),
-  progress: z.string().describe('A short, one-sentence summary of the summarization process.')
+  summary: z
+    .string()
+    .describe(
+      'The detailed, markdown-formatted summary of the input text, including emojis and bullet points.'
+    ),
+  progress: z
+    .string()
+    .describe('A short, one-sentence summary of the summarization process.'),
 });
 export type SummarizeTextOutput = z.infer<typeof SummarizeTextOutputSchema>;
 
-export async function summarizeText(input: SummarizeTextInput): Promise<SummarizeTextOutput> {
+export async function summarizeText(
+  input: SummarizeTextInput
+): Promise<SummarizeTextOutput> {
   return summarizeTextFlow(input);
 }
 
@@ -31,7 +39,16 @@ const prompt = ai.definePrompt({
   model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: SummarizeTextInputSchema},
   output: {schema: SummarizeTextOutputSchema},
-  prompt: `You are an expert summarizer. Please provide a concise summary of the following text:\n\n{{{text}}}`,
+  prompt: `You are an expert educational writer who creates engaging, detailed, and easy-to-understand summaries from text.
+
+  Your task is to generate a comprehensive summary of the provided text. The summary must be:
+  - **Elaborated:** Go beyond a simple, short summary. Capture the nuances and main arguments of the text.
+  - **Well-Structured:** Use markdown for formatting, including headers and bullet points (using '*') to organize information logically.
+  - **Engaging:** Incorporate relevant emojis to highlight key sections and make the content more visually appealing and memorable.
+  - **Complete:** Ensure all critical concepts, key points, and important details from the original text are included. Do not leave out important information.
+
+  Here is the text to summarize:
+  {{{text}}}`,
 });
 
 const summarizeTextFlow = ai.defineFlow(
@@ -44,7 +61,7 @@ const summarizeTextFlow = ai.defineFlow(
     const {output} = await prompt(input);
     return {
       summary: output!.summary,
-      progress: 'AI generated a concise summary of the input text.',
+      progress: 'AI generated a detailed summary of the input text.',
     };
   }
 );
