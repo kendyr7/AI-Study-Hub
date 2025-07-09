@@ -25,7 +25,7 @@ export default function LandingPage() {
             Powered by Gemini
           </div>
           <h1 className="text-5xl md:text-7xl font-headline font-bold tracking-tighter mb-6 bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
-            Supercharge Your Learning with AI
+            Your Learning with AI
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-10">
             AI Study Hub automatically creates summaries, flashcards, and tests from any text. Focus on what matters most: learning.
