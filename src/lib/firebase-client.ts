@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
 // Client-side Firebase config
 const firebaseConfig = {
@@ -15,6 +16,7 @@ const firebaseConfig = {
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;
 let auth: Auth | null = null;
+let storage: FirebaseStorage | null = null;
 
 // Check if all required config values are present and not placeholders
 if (
@@ -28,6 +30,7 @@ if (
     app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     db = getFirestore(app);
     auth = getAuth(app);
+    storage = getStorage(app);
   } catch (error) {
     console.error("Firebase initialization failed:", error);
   }
@@ -37,4 +40,4 @@ if (
   );
 }
 
-export { app, db, auth };
+export { app, db, auth, storage };
