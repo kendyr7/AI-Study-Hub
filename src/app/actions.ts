@@ -230,20 +230,58 @@ export async function createFolderAction(formData: { name: string; userId: strin
       };
       await folderRef.set(newFolder);
       
+      const createdDoc = await folderRef.get();
+      const createdData = createdDoc.data()!;
+      
       const createdFolder: Folder = {
         id: folderRef.id,
-        userId,
-        name,
-        order,
-        color,
-        emoji,
-        createdAt: new Date()
+        userId: createdData.userId,
+        name: createdData.name,
+        order: createdData.order,
+        color: createdData.color,
+        emoji: createdData.emoji,
+        createdAt: createdData.createdAt.toDate()
       };
 
       return { success: true, folder: createdFolder };
     } catch (error: any) {
       console.error("Error creating folder:", error);
       return { success: false, error: `Failed to create folder: ${error.message}` };
+    }
+  }
+
+  export async function updateFolderAction(formData: { folderId: string; name: string; color?: string; emoji?: string }) {
+    if (!adminDb) {
+      return { success: false, error: "Database not configured." };
+    }
+  
+    const { folderId, name, color, emoji } = formData;
+    try {
+      const folderRef = adminDb.collection('folders').doc(folderId);
+      
+      const updateData: { name: string; color?: string; emoji?: string } = { name };
+      if (color) updateData.color = color;
+      if (emoji) updateData.emoji = emoji;
+
+      await folderRef.update(updateData);
+      
+      const updatedDoc = await folderRef.get();
+      const updatedData = updatedDoc.data()!;
+
+      const updatedFolder: Folder = {
+        id: updatedDoc.id,
+        userId: updatedData.userId,
+        name: updatedData.name,
+        order: updatedData.order,
+        color: updatedData.color,
+        emoji: updatedData.emoji,
+        createdAt: updatedData.createdAt.toDate()
+      };
+
+      return { success: true, folder: updatedFolder };
+    } catch (error: any) {
+      console.error("Error updating folder:", error);
+      return { success: false, error: `Failed to update folder: ${error.message}` };
     }
   }
   

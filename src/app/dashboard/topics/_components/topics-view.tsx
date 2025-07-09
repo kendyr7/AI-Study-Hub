@@ -12,12 +12,13 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { FolderPlus, Inbox, PlusCircle, Archive, Folder as FolderIcon } from 'lucide-react';
+import { FolderPlus, Inbox, PlusCircle, Archive, Folder as FolderIcon, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { TopicsList } from './topics-list';
 import { TopicDetailView } from './topic-detail-view';
 import { NewFolderDialog } from './new-folder-dialog';
+import { EditFolderDialog } from './edit-folder-dialog';
 
 const UNCATEGORIZED_ID = 'uncategorized';
 
@@ -26,6 +27,7 @@ function FolderSidebar({
     selectedFolderId, 
     onSelectFolder,
     onFolderCreated,
+    onFolderUpdated,
     uncategorizedCount,
     getTopicCountForFolder
 }: {
@@ -33,62 +35,87 @@ function FolderSidebar({
     selectedFolderId: string | null,
     onSelectFolder: (id: string) => void,
     onFolderCreated: (newFolder: Folder) => void,
+    onFolderUpdated: (updatedFolder: Folder) => void,
     uncategorizedCount: number,
     getTopicCountForFolder: (folderId: string) => number,
 }) {
-    return (
-        <div className="flex flex-col h-full bg-card/30 p-2">
-            <div className="flex items-center justify-between p-2">
-                <h2 className="text-lg font-semibold">Folders</h2>
-                 <NewFolderDialog onFolderCreated={onFolderCreated}>
-                    <Button variant="ghost" size="icon">
-                        <FolderPlus className="h-5 w-5" />
-                    </Button>
-                </NewFolderDialog>
-            </div>
-             <div className="flex-1 mt-2">
-                <ScrollArea>
-                    <nav className="flex flex-col gap-1 px-2">
-                        <Button
-                             variant={selectedFolderId === UNCATEGORIZED_ID ? "secondary" : "ghost"}
-                            className="w-full justify-start"
-                            onClick={() => onSelectFolder(UNCATEGORIZED_ID)}
-                        >
-                            <Inbox className="mr-2 h-4 w-4" />
-                            <span>Inbox</span>
-                            <span className="ml-auto text-xs text-muted-foreground">{uncategorizedCount}</span>
-                        </Button>
-                        {folders.map(folder => (
-                            <Button
-                                key={folder.id}
-                                variant={selectedFolderId === folder.id ? "secondary" : "ghost"}
-                                className="w-full justify-start"
-                                onClick={() => onSelectFolder(folder.id)}
-                            >
-                                <span className="mr-2 h-4 w-4 flex items-center justify-center">
-                                    {folder.emoji ? (
-                                        <span>{folder.emoji}</span>
-                                    ) : (
-                                        <FolderIcon style={{color: folder.color}}/>
-                                    )}
-                                </span>
+    const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
 
-                                <span className="truncate">{folder.name}</span>
-                                <span className="ml-auto text-xs text-muted-foreground">{getTopicCountForFolder(folder.id)}</span>
+    return (
+        <>
+            <div className="flex flex-col h-full bg-card/30 p-2">
+                <div className="flex items-center justify-between p-2">
+                    <h2 className="text-lg font-semibold">Folders</h2>
+                    <NewFolderDialog onFolderCreated={onFolderCreated}>
+                        <Button variant="ghost" size="icon">
+                            <FolderPlus className="h-5 w-5" />
+                        </Button>
+                    </NewFolderDialog>
+                </div>
+                <div className="flex-1 mt-2">
+                    <ScrollArea>
+                        <nav className="flex flex-col gap-1 px-2">
+                            <Button
+                                variant={selectedFolderId === UNCATEGORIZED_ID ? "secondary" : "ghost"}
+                                className="w-full justify-start"
+                                onClick={() => onSelectFolder(UNCATEGORIZED_ID)}
+                            >
+                                <Inbox className="mr-2 h-4 w-4" />
+                                <span>Inbox</span>
+                                <span className="ml-auto text-xs text-muted-foreground">{uncategorizedCount}</span>
                             </Button>
-                        ))}
-                    </nav>
-                </ScrollArea>
+                            {folders.map(folder => (
+                                <div key={folder.id} className="group relative">
+                                    <Button
+                                        variant={selectedFolderId === folder.id ? "secondary" : "ghost"}
+                                        className="w-full justify-start"
+                                        onClick={() => onSelectFolder(folder.id)}
+                                    >
+                                        <span className="mr-2 h-4 w-4 flex items-center justify-center">
+                                            {folder.emoji ? (
+                                                <span>{folder.emoji}</span>
+                                            ) : (
+                                                <FolderIcon style={{color: folder.color}}/>
+                                            )}
+                                        </span>
+
+                                        <span className="truncate">{folder.name}</span>
+                                        <span className="ml-auto text-xs text-muted-foreground">{getTopicCountForFolder(folder.id)}</span>
+                                    </Button>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setEditingFolder(folder);
+                                        }}
+                                    >
+                                        <Settings className="h-4 w-4"/>
+                                    </Button>
+                                </div>
+                            ))}
+                        </nav>
+                    </ScrollArea>
+                </div>
+                <div className="p-2 border-t border-white/10">
+                    <Button variant="outline" asChild className="w-full">
+                        <Link href="/dashboard/archive">
+                            <Archive className="mr-2 h-4 w-4" />
+                            View Archive
+                        </Link>
+                    </Button>
+                </div>
             </div>
-            <div className="p-2 border-t border-white/10">
-                 <Button variant="outline" asChild className="w-full">
-                    <Link href="/dashboard/archive">
-                        <Archive className="mr-2 h-4 w-4" />
-                        View Archive
-                    </Link>
-                </Button>
-            </div>
-        </div>
+            {editingFolder && (
+                <EditFolderDialog 
+                    folder={editingFolder}
+                    onFolderUpdated={onFolderUpdated}
+                    open={!!editingFolder}
+                    onOpenChange={(open) => !open && setEditingFolder(null)}
+                />
+            )}
+        </>
     );
 }
 
@@ -146,6 +173,15 @@ export function TopicsView({ initialTopics, initialFolders }: { initialTopics: T
         onSelectFolder(newFolder.id);
     };
 
+    const onFolderUpdated = (updatedFolder: Folder) => {
+        setFolders(current => produce(current, draft => {
+            const index = draft.findIndex(f => f.id === updatedFolder.id);
+            if (index !== -1) {
+                draft[index] = updatedFolder;
+            }
+        }));
+    };
+
     const handleArchiveTopic = (topicId: string) => {
         if (selectedTopicId === topicId) {
             onTopicClose();
@@ -200,6 +236,7 @@ export function TopicsView({ initialTopics, initialFolders }: { initialTopics: T
             selectedFolderId={selectedFolderId}
             onSelectFolder={onSelectFolder}
             onFolderCreated={onFolderCreated}
+            onFolderUpdated={onFolderUpdated}
             uncategorizedCount={uncategorizedCount}
             getTopicCountForFolder={getTopicCountForFolder}
         />
