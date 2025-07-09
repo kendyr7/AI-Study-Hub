@@ -24,7 +24,7 @@ export default function LandingPage() {
             <Sparkles className="h-4 w-4 mr-2 text-primary" />
             Powered by Gemini
           </div>
-          <h1 className="text-5xl md:text-7xl font-headline font-bold tracking-tighter mb-6 bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-7xl font-headline font-bold tracking-tighter mb-6 text-foreground">
             Your Learning with AI
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-10">
@@ -35,7 +35,7 @@ export default function LandingPage() {
           </Button>
         </section>
 
-        <section id="features" className="py-16 sm:py-20 md:py-28">
+        <section id="features" className="py-16 sm:py-20 md:py-28 bg-muted/30">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-headline font-bold">A Smarter Way to Study</h2>
@@ -76,9 +76,9 @@ export default function LandingPage() {
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <Card className="text-center transition-transform duration-300 hover:-translate-y-2">
+    <Card className="text-center transition-transform duration-300 hover:-translate-y-2 bg-card">
       <CardHeader>
-        <div className="mx-auto bg-gradient-to-br from-primary/20 to-accent/20 text-primary p-5 rounded-xl w-fit">
+        <div className="mx-auto bg-primary/10 text-primary p-5 rounded-xl w-fit">
           {icon}
         </div>
         <CardTitle className="mt-6 font-headline text-xl">{title}</CardTitle>
