@@ -27,10 +27,12 @@ async function getTopicsAndFolders(userId: string) {
             content: data.content,
             summary: data.summary,
             order: data.order,
+            status: data.status || 'active',
             createdAt: data.createdAt.toDate(),
+            archivedAt: data.archivedAt ? data.archivedAt.toDate() : undefined,
             lastStudiedAt: data.lastStudiedAt ? data.lastStudiedAt.toDate() : undefined,
         };
-    });
+    }).filter(topic => topic.status === 'active');
 
     const folders: Folder[] = foldersSnapshot.docs.map(doc => {
         const data = doc.data();
@@ -43,7 +45,6 @@ async function getTopicsAndFolders(userId: string) {
         };
     });
 
-    // Sort in application code to avoid needing a composite index
     topics.sort((a, b) => a.order - b.order);
     folders.sort((a, b) => a.order - b.order);
 
@@ -51,7 +52,6 @@ async function getTopicsAndFolders(userId: string) {
 }
 
 export default async function TopicsPage() {
-    // In a real app, you'd get this from auth
     const userId = 'user-123';
     const { topics, folders } = await getTopicsAndFolders(userId);
 

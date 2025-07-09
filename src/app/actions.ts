@@ -1,5 +1,6 @@
 'use server';
 
+import admin from 'firebase-admin';
 import { adminDb } from '@/lib/firebase';
 import type { Topic, Flashcard, TestQuestion, Folder } from '@/lib/types';
 import { summarizeText } from '@/ai/flows/summarize-text';
@@ -38,6 +39,7 @@ export async function createTopicAction(formData: { title: string; tags: string;
       summary: summaryResult.summary,
       folderId,
       order,
+      status: 'active',
       createdAt: new Date(),
     };
 
@@ -74,13 +76,30 @@ export async function createTopicAction(formData: { title: string; tags: string;
     console.error("Error creating topic:", error);
     const errorMessage = error.message || "An unknown error occurred.";
     
-    // Provide more specific feedback for common AI errors
     if (errorMessage.includes('SAFETY')) {
         return { success: false, error: "Content moderation error: The provided text could not be processed due to safety policies. Please revise your input." };
     }
 
     return { success: false, error: `Failed to create topic: ${errorMessage}` };
   }
+}
+
+export async function archiveTopicAction(payload: { topicId: string }) {
+    if (!adminDb) {
+      return { success: false, error: "Database not configured." };
+    }
+    const { topicId } = payload;
+    try {
+      const topicRef = adminDb.collection('topics').doc(topicId);
+      await topicRef.update({
+        status: 'archived',
+        archivedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      return { success: true };
+    } catch (error: any) {
+      console.error("Error archiving topic:", error);
+      return { success: false, error: `Failed to archive topic: ${error.message}` };
+    }
 }
 
 export async function updateTopicSummaryAction(formData: { topicId: string; summary: string }) {

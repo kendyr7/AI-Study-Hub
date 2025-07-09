@@ -15,7 +15,9 @@ export interface Topic {
   content: string;
   summary: string;
   order: number;
+  status: 'active' | 'archived';
   createdAt: Date;
+  archivedAt?: Date;
   lastStudiedAt?: Date;
 }
 

@@ -12,8 +12,6 @@ import {
   DragStartEvent,
   DragOverEvent,
   DragOverlay,
-  DropAnimation,
-  defaultDropAnimationSideEffects,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -64,7 +62,6 @@ export function TopicsList({ initialTopics, initialFolders }: { initialTopics: T
         if (groupedTopics[folderId]) {
             groupedTopics[folderId].push(topic);
         } else {
-            // This case should not happen if folders are loaded correctly
             groupedTopics[UNCAT_FOLDER_ID].push(topic);
         }
     });
@@ -82,11 +79,11 @@ export function TopicsList({ initialTopics, initialFolders }: { initialTopics: T
   const findContainer = (id: string) => {
     if (folders.find(f => f.id === id)) return 'root';
     for (const folder of folders) {
-        if (items[folder.id].find((t: Topic) => t.id === id)) {
+        if ((items[folder.id] as Topic[]).find((t: Topic) => t.id === id)) {
             return folder.id;
         }
     }
-    if (items[UNCAT_FOLDER_ID].find((t: Topic) => t.id === id)) {
+    if ((items[UNCAT_FOLDER_ID] as Topic[]).find((t: Topic) => t.id === id)) {
         return UNCAT_FOLDER_ID;
     }
     return null;
@@ -105,7 +102,6 @@ export function TopicsList({ initialTopics, initialFolders }: { initialTopics: T
 
     if (!activeContainer || !overContainer) return;
     
-    // If over a folder, set it as the container
     if (folders.some(f => f.id === overId)) {
         overContainer = overId;
     }
@@ -119,7 +115,6 @@ export function TopicsList({ initialTopics, initialFolders }: { initialTopics: T
                 const newFolderId = overContainer === 'root' || overContainer === UNCAT_FOLDER_ID ? null : overContainer;
                 draft[activeIndex].folderId = newFolderId;
 
-                // Move to new container for instant visual feedback
                 const [movedItem] = draft.splice(activeIndex, 1);
                 draft.push(movedItem); 
             });
@@ -137,7 +132,6 @@ export function TopicsList({ initialTopics, initialFolders }: { initialTopics: T
     const activeContainer = findContainer(activeId);
     let overContainer = findContainer(overId);
 
-    // If over a folder, set it as the container
     if (folders.some(f => f.id === overId)) {
       overContainer = overId;
     }
@@ -149,7 +143,6 @@ export function TopicsList({ initialTopics, initialFolders }: { initialTopics: T
 
     const activeIsFolder = folders.some(f => f.id === activeId);
 
-    // Scenario 1: Reordering folders
     if (activeIsFolder && activeContainer === 'root' && overContainer === 'root') {
       const oldIndex = folders.findIndex(f => f.id === activeId);
       const newIndex = folders.findIndex(f => f.id === overId);
@@ -158,17 +151,15 @@ export function TopicsList({ initialTopics, initialFolders }: { initialTopics: T
       const updatePayload = newFolders.map((f, i) => ({ id: f.id, order: i }));
       await updateItemsOrderAction({ items: updatePayload, type: 'folders' });
     }
-    // Scenario 2: Moving or reordering topics
     else if (!activeIsFolder) {
       const oldTopics = items[activeContainer] as Topic[];
       const newTopics = items[overContainer] as Topic[];
       const oldIndex = oldTopics.findIndex(t => t.id === activeId);
       const newIndex = overContainer === activeContainer 
         ? newTopics.findIndex(t => t.id === overId)
-        : newTopics.length; // Add to end of new container
+        : newTopics.length;
 
       if (activeContainer === overContainer) {
-          // Reordering within the same container
           const reordered = arrayMove(oldTopics, oldIndex, newIndex);
           const newOrderState = produce(topics, draft => {
               reordered.forEach((topic, index) => {
@@ -179,9 +170,7 @@ export function TopicsList({ initialTopics, initialFolders }: { initialTopics: T
           setTopics(newOrderState.sort((a,b) => a.order - b.order));
           await updateItemsOrderAction({ items: reordered.map((t, i) => ({ id: t.id, order: i })), type: 'topics' });
       } else {
-          // Moving to a new container
           const newFolderId = overContainer === UNCAT_FOLDER_ID ? null : overContainer;
-          const movedTopic = topics.find(t => t.id === activeId)!;
           
           const newTopicsState = produce(topics, draft => {
             const topicToMove = draft.find(t => t.id === activeId)!;
@@ -191,7 +180,6 @@ export function TopicsList({ initialTopics, initialFolders }: { initialTopics: T
           setTopics(newTopicsState);
           await updateTopicFolderAction({ topicId: activeId, newFolderId, newOrder: newTopics.length });
 
-          // Reorder old container
           const remainingTopics = oldTopics.filter(t => t.id !== activeId);
           await updateItemsOrderAction({ items: remainingTopics.map((t, i) => ({ id: t.id, order: i })), type: 'topics' });
       }
@@ -202,6 +190,10 @@ export function TopicsList({ initialTopics, initialFolders }: { initialTopics: T
 
   const onFolderCreated = useCallback((newFolder: Folder) => {
     setFolders(currentFolders => [...currentFolders, newFolder]);
+  }, []);
+
+  const handleArchiveTopic = useCallback((topicId: string) => {
+    setTopics(currentTopics => currentTopics.filter(t => t.id !== topicId));
   }, []);
 
   if (topics.length === 0 && folders.length === 0) {
@@ -235,7 +227,7 @@ export function TopicsList({ initialTopics, initialFolders }: { initialTopics: T
                   <SortableContext items={(items[folder.id] as Topic[]).map(t => t.id)} strategy={verticalListSortingStrategy}>
                     <div className="space-y-2 p-4 pt-0">
                       {(items[folder.id] as Topic[]).map(topic => (
-                          <TopicItem key={topic.id} topic={topic} disabled={!isMounted} />
+                          <TopicItem key={topic.id} topic={topic} disabled={!isMounted} onArchive={handleArchiveTopic} />
                       ))}
                       {(items[folder.id] as Topic[]).length === 0 && (
                           <p className="text-sm text-muted-foreground text-center py-4">Drag topics here to add them to this folder.</p>
@@ -252,7 +244,7 @@ export function TopicsList({ initialTopics, initialFolders }: { initialTopics: T
             <SortableContext items={(items[UNCAT_FOLDER_ID] as Topic[]).map(t => t.id)} strategy={verticalListSortingStrategy}>
                 <div className="space-y-2 p-4 pt-0">
                 {(items[UNCAT_FOLDER_ID] as Topic[]).map(topic => (
-                    <TopicItem key={topic.id} topic={topic} disabled={!isMounted} />
+                    <TopicItem key={topic.id} topic={topic} disabled={!isMounted} onArchive={handleArchiveTopic} />
                 ))}
                 </div>
             </SortableContext>
