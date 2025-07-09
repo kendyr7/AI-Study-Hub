@@ -17,7 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Settings, CircleUser, LogOut, Menu } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 function NavItem({ href, children }: { href: string, children: React.ReactNode }) {
     const pathname = usePathname();
@@ -78,11 +78,11 @@ export function Header() {
                         <span className="sr-only">Toggle Menu</span>
                     </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="bg-background/80 backdrop-blur-xl border-r-white/10">
-                    <div className="mb-8">
-                        <Logo />
-                    </div>
-                    <nav className="flex flex-col gap-4">
+                <SheetContent side="left" className="bg-background/80 backdrop-blur-xl border-r-white/10 flex flex-col p-0">
+                    <SheetHeader className="border-b border-white/10 p-4">
+                        <SheetTitle><Logo /></SheetTitle>
+                    </SheetHeader>
+                    <nav className="flex flex-col gap-4 p-4">
                         {mobileNavItems.map((item) => (
                             <MobileNavItem key={item.href} href={item.href} onClick={() => setOpen(false)}>
                                 {item.label}
