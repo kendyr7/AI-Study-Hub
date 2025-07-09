@@ -12,14 +12,14 @@ export default function SignupPage() {
         </div>
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="font-headline text-2xl">Create an Account</CardTitle>
+            <CardTitle className="font-headline text-3xl">Create an Account</CardTitle>
             <CardDescription>Start your AI-powered learning journey today</CardDescription>
           </CardHeader>
           <CardContent>
             <UserAuthForm signup />
-            <p className="mt-4 text-center text-sm text-muted-foreground">
+            <p className="mt-6 text-center text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link href="/login" className="underline hover:text-primary">
+              <Link href="/login" className="underline hover:text-primary font-semibold">
                 Login
               </Link>
             </p>

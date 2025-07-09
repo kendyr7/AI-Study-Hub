@@ -58,7 +58,7 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between space-y-2">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight font-headline">Dashboard</h1>
+          <h1 className="text-4xl font-bold tracking-tight font-headline">Dashboard</h1>
           <p className="text-muted-foreground">Welcome back! Here&apos;s a summary of your study progress.</p>
         </div>
         <div className="flex items-center space-x-2">
@@ -71,21 +71,21 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <StatCard 
           title="Topics Created" 
           value={totalTopics.toString()}
-          icon={<BookCopy className="h-6 w-6 text-muted-foreground" />} 
+          icon={<BookCopy className="h-8 w-8 text-muted-foreground" />} 
         />
         <StatCard 
           title="Flashcards Studied" 
           value={flashcardsStudied.toString()} 
-          icon={<Lightbulb className="h-6 w-6 text-muted-foreground" />} 
+          icon={<Lightbulb className="h-8 w-8 text-muted-foreground" />} 
         />
         <StatCard 
           title="Avg. Test Score" 
           value={avgTestScore}
-          icon={<TestTube className="h-6 w-6 text-muted-foreground" />} 
+          icon={<TestTube className="h-8 w-8 text-muted-foreground" />} 
         />
       </div>
 
@@ -100,36 +100,40 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
         
-        <Card className="bg-primary/10 border-primary/20">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <Lightbulb className="w-8 h-8 text-primary" />
-              <CardTitle className="font-headline text-primary">Intelligent Review</CardTitle>
-            </div>
-            <CardDescription className="pt-2">
-              Our AI has identified topics you could improve on. Start a review session to strengthen your knowledge.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {weakTopics.length > 0 ? (
-                <>
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                    {weakTopics.map(topic => (
-                        <li key={topic} className="flex items-center gap-2">
-                            <ArrowRight className="h-4 w-4 text-primary" />
-                            <span>{topic}</span>
-                        </li>
-                    ))}
-                    </ul>
-                    <Button className="w-full mt-6" variant="default" asChild>
-                        <Link href="/dashboard/review">Start Review Session</Link>
-                    </Button>
-                </>
-            ) : (
-                <p className="text-sm text-muted-foreground">Study some topics and take some tests to get personalized review sessions!</p>
-            )}
-          </CardContent>
-        </Card>
+        <div className="relative rounded-2xl bg-gradient-to-r from-primary to-accent p-px">
+          <Card className="relative h-full border-0">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg">
+                  <Lightbulb className="w-8 h-8 text-primary" />
+                </div>
+                <CardTitle className="font-headline text-primary">Intelligent Review</CardTitle>
+              </div>
+              <CardDescription className="pt-2">
+                Our AI has identified topics you could improve on. Start a review session to strengthen your knowledge.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {weakTopics.length > 0 ? (
+                  <>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                      {weakTopics.map(topic => (
+                          <li key={topic} className="flex items-center gap-2">
+                              <ArrowRight className="h-4 w-4 text-primary" />
+                              <span>{topic}</span>
+                          </li>
+                      ))}
+                      </ul>
+                      <Button className="w-full mt-6" variant="default" asChild>
+                          <Link href="/dashboard/review">Start Review Session</Link>
+                      </Button>
+                  </>
+              ) : (
+                  <p className="text-sm text-muted-foreground">Study some topics and take some tests to get personalized review sessions!</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
@@ -139,11 +143,11 @@ function StatCard({ title, value, icon }: { title: string; value: string; icon: 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <CardTitle className="text-base font-medium">{title}</CardTitle>
         {icon}
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-4xl font-bold font-headline">{value}</div>
       </CardContent>
     </Card>
   );
@@ -163,7 +167,7 @@ function RecentTopicsTable({ topics }: { topics: Topic[] }) {
   return (
     <Table>
       <TableHeader>
-        <TableRow>
+        <TableRow className="border-white/10">
           <TableHead>Topic</TableHead>
           <TableHead>Tags</TableHead>
           <TableHead className="text-right">Created</TableHead>
@@ -171,13 +175,13 @@ function RecentTopicsTable({ topics }: { topics: Topic[] }) {
       </TableHeader>
       <TableBody>
         {topics.map((topic) => (
-            <TableRow key={topic.id}>
+            <TableRow key={topic.id} className="border-white/10">
                 <TableCell className="font-medium">
-                    <Link href={`/dashboard/topics/${topic.id}`} className="hover:underline">{topic.title}</Link>
+                    <Link href={`/dashboard/topics/${topic.id}`} className="hover:text-primary transition-colors">{topic.title}</Link>
                 </TableCell>
                 <TableCell>
                     <div className="flex gap-1">
-                        {topic.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
+                        {topic.tags.map(tag => <Badge key={tag} variant="secondary" className="border border-white/10">{tag}</Badge>)}
                     </div>
                 </TableCell>
                 <TableCell className="text-right text-muted-foreground">

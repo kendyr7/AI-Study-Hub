@@ -12,14 +12,14 @@ export default function LoginPage() {
         </div>
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="font-headline text-2xl">Welcome Back!</CardTitle>
+            <CardTitle className="font-headline text-3xl">Welcome Back</CardTitle>
             <CardDescription>Sign in to access your study hub</CardDescription>
           </CardHeader>
           <CardContent>
             <UserAuthForm />
-            <p className="mt-4 text-center text-sm text-muted-foreground">
+            <p className="mt-6 text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{" "}
-              <Link href="/signup" className="underline hover:text-primary">
+              <Link href="/signup" className="underline hover:text-primary font-semibold">
                 Sign up
               </Link>
             </p>

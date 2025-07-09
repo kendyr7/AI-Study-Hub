@@ -14,7 +14,6 @@ import {
   BookCopy,
   Lightbulb,
   Settings,
-  CircleUser,
   LogOut,
 } from 'lucide-react';
 import { Logo } from '@/components/logo';
@@ -40,7 +39,7 @@ function NavLink({ href, icon, label }: { href: string; icon: React.ReactNode; l
 
 export function AppSidebar() {
   return (
-    <Sidebar>
+    <Sidebar variant="floating" collapsible="icon">
       <SidebarHeader>
         <Logo />
       </SidebarHeader>
@@ -49,12 +48,13 @@ export function AppSidebar() {
           <NavLink href="/dashboard" icon={<LayoutDashboard />} label="Dashboard" />
           <NavLink href="/dashboard/topics" icon={<BookCopy />} label="Topics" />
           <NavLink href="/dashboard/review" icon={<Lightbulb />} label="Review" />
-          <NavLink href="/dashboard/settings" icon={<Settings />} label="Settings" />
+          
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-2">
         <Separator className="my-2" />
         <SidebarMenu>
+          <NavLink href="/dashboard/settings" icon={<Settings />} label="Settings" />
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Profile">
                 <Link href="/dashboard/profile">
