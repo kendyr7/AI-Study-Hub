@@ -55,7 +55,7 @@ export async function createTopicAction(formData: { title: string; tags: string;
             topicId: topicRef.id,
             type: q.type,
             question: q.question,
-            options: q.options,
+            options: q.options || [],
             answer: q.answer
         };
         batch.set(questionRef, questionData);
