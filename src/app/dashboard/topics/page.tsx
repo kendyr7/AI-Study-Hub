@@ -1,20 +1,39 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
+import { adminDb } from "@/lib/firebase";
+import type { Topic } from "@/lib/types";
+import { formatDistanceToNow } from 'date-fns';
 
-export default function TopicsPage() {
-    const topics = [
-        { name: "The History of Ancient Rome", tags: ["History", "Europe"], lastStudied: "2 hours ago" },
-        { name: "Introduction to React Hooks", tags: ["Programming", "Web Dev"], lastStudied: "1 day ago" },
-        { name: "The Mitochondrion", tags: ["Biology", "Science"], lastStudied: "3 days ago" },
-        { name: "Principles of Macroeconomics", tags: ["Economics"], lastStudied: "5 days ago" },
-        { name: "The Solar System", tags: ["Astronomy", "Science"], lastStudied: "1 week ago" },
-        { name: "Shakespeare's Sonnets", tags: ["Literature", "Poetry"], lastStudied: "2 weeks ago" },
-    ];
+async function getTopics(userId: string): Promise<Topic[]> {
+  const topicsSnapshot = await adminDb.collection('topics')
+    .where('userId', '==', userId)
+    .orderBy('createdAt', 'desc')
+    .get();
+  
+  if (topicsSnapshot.empty) {
+    return [];
+  }
+  
+  return topicsSnapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      ...data,
+      id: doc.id,
+      // Firestore timestamps need to be converted to JS Dates
+      createdAt: data.createdAt.toDate(),
+      lastStudiedAt: data.lastStudiedAt ? data.lastStudiedAt.toDate() : undefined,
+    } as Topic;
+  });
+}
+
+export default async function TopicsPage() {
+    // In a real app, you'd get this from auth
+    const userId = 'user-123';
+    const topics = await getTopics(userId);
 
   return (
     <div className="space-y-8">
@@ -39,36 +58,48 @@ export default function TopicsPage() {
             <CardDescription>Click on a topic to start studying.</CardDescription>
         </CardHeader>
         <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                    <TableHead>Topic</TableHead>
-                    <TableHead>Tags</TableHead>
-                    <TableHead>Last Studied</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {topics.map((topic) => (
-                        <TableRow key={topic.name}>
-                            <TableCell className="font-medium">
-                                <Link href="#" className="hover:underline">{topic.name}</Link>
-                            </TableCell>
-                            <TableCell>
-                                <div className="flex gap-1">
-                                    {topic.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
-                                </div>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground">{topic.lastStudied}</TableCell>
-                            <TableCell className="text-right">
-                                <Button variant="outline" size="sm" asChild>
-                                    <Link href="#">Study</Link>
-                                </Button>
-                            </TableCell>
+            {topics.length > 0 ? (
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                        <TableHead>Topic</TableHead>
+                        <TableHead>Tags</TableHead>
+                        <TableHead>Created</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+                    </TableHeader>
+                    <TableBody>
+                        {topics.map((topic) => (
+                            <TableRow key={topic.id}>
+                                <TableCell className="font-medium">
+                                    {/* This link will eventually go to /dashboard/topics/[topicId] */}
+                                    <Link href="#" className="hover:underline">{topic.title}</Link>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex gap-1">
+                                        {topic.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
+                                    </div>
+                                </TableCell>
+                                <TableCell className="text-muted-foreground">
+                                    {formatDistanceToNow(topic.createdAt, { addSuffix: true })}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <Button variant="outline" size="sm" asChild>
+                                        <Link href="#">Study</Link>
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            ) : (
+                <div className="text-center py-10">
+                    <p className="text-muted-foreground">You haven't created any topics yet.</p>
+                    <Button asChild className="mt-4">
+                        <Link href="/dashboard/topics/new">Create Your First Topic</Link>
+                    </Button>
+                </div>
+            )}
         </CardContent>
       </Card>
     </div>

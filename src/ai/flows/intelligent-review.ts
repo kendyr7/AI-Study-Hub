@@ -1,4 +1,3 @@
-// src/ai/flows/intelligent-review.ts
 'use server';
 /**
  * @fileOverview A flow that intelligently surfaces flashcards and test questions from topics where the user has performed poorly.
@@ -10,6 +9,9 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { adminDb } from '@/lib/firebase';
+import type { Flashcard, TestQuestion, Topic } from '@/lib/types';
+
 
 const IntelligentReviewInputSchema = z.object({
   userId: z.string().describe('The ID of the user.'),
@@ -47,49 +49,87 @@ const getPerformanceData = ai.defineTool({
   inputSchema: z.object({
     userId: z.string().describe('The ID of the user.'),
   }),
-  outputSchema: z.record(z.number()).describe('A map of topic to performance score (0-100).'),
-}, async (input) => {
-  // TODO: Implement the logic to retrieve the user's performance data from the database.
-  // This is a placeholder implementation.
-  return {
-    'Topic 1': 60,
-    'Topic 2': 40,
-    'Topic 3': 80,
-  };
+  outputSchema: z.record(z.string()).describe('A map of topic name to performance score (0-100).'),
+}, async ({ userId }) => {
+  // In a real app, this would be a complex query based on test results.
+  // For now, we'll return some mock data.
+  // We'll fetch the user's topics and assign random scores.
+  const topicsSnapshot = await adminDb.collection('topics').where('userId', '==', userId).get();
+  if (topicsSnapshot.empty) {
+    return {};
+  }
+  const performanceData: { [key: string]: number } = {};
+  topicsSnapshot.docs.forEach(doc => {
+    const topic = doc.data() as Topic;
+    // Assign a random score for demonstration
+    performanceData[topic.title] = Math.floor(Math.random() * 60) + 20; // Score between 20 and 80
+  });
+  return performanceData;
 });
 
 const getFlashcardsByTopic = ai.defineTool({
   name: 'getFlashcardsByTopic',
-  description: 'Retrieves flashcards for a specific topic.',
+  description: 'Retrieves flashcards for a specific topic name.',
   inputSchema: z.object({
-    topic: z.string().describe('The topic to retrieve flashcards for.'),
+    topic: z.string().describe('The topic name to retrieve flashcards for.'),
+    userId: z.string().describe('The ID of the user.'),
     count: z.number().describe('The maximum number of flashcards to retrieve.'),
   }),
   outputSchema: z.array(FlashcardSchema).describe('An array of flashcards for the given topic.'),
-}, async (input) => {
-  // TODO: Implement the logic to retrieve flashcards from the database.
-  // This is a placeholder implementation.
-  return [
-    {question: `Question 1 for ${input.topic}`, answer: `Answer 1 for ${input.topic}`, topic: input.topic},
-    {question: `Question 2 for ${input.topic}`, answer: `Answer 2 for ${input.topic}`, topic: input.topic},
-  ].slice(0, input.count);
+}, async ({ topic: topicName, userId, count }) => {
+    const topicsSnapshot = await adminDb.collection('topics')
+        .where('userId', '==', userId)
+        .where('title', '==', topicName)
+        .limit(1)
+        .get();
+
+    if (topicsSnapshot.empty) {
+        return [];
+    }
+    const topicDoc = topicsSnapshot.docs[0];
+
+    const flashcardsSnapshot = await topicDoc.ref.collection('flashcards').limit(count).get();
+    return flashcardsSnapshot.docs.map(doc => {
+        const data = doc.data() as Flashcard;
+        return {
+            question: data.question,
+            answer: data.answer,
+            topic: topicName
+        };
+    });
 });
 
 const getTestQuestionsByTopic = ai.defineTool({
   name: 'getTestQuestionsByTopic',
-  description: 'Retrieves test questions for a specific topic.',
+  description: 'Retrieves test questions for a specific topic name.',
   inputSchema: z.object({
-    topic: z.string().describe('The topic to retrieve test questions for.'),
+    topic: z.string().describe('The topic name to retrieve test questions for.'),
+    userId: z.string().describe('The ID of the user.'),
     count: z.number().describe('The maximum number of test questions to retrieve.'),
   }),
   outputSchema: z.array(TestQuestionSchema).describe('An array of test questions for the given topic.'),
-}, async (input) => {
-  // TODO: Implement the logic to retrieve test questions from the database.
-  // This is a placeholder implementation.
-  return [
-    {question: `Test Question 1 for ${input.topic}`, answer: `Correct Answer 1 for ${input.topic}`, options: [`Option 1`, `Option 2`, `Correct Answer 1 for ${input.topic}`], topic: input.topic},
-    {question: `Test Question 2 for ${input.topic}`, answer: `Correct Answer 2 for ${input.topic}`, options: [`Option 1`, `Option 2`, `Correct Answer 2 for ${input.topic}`], topic: input.topic},
-  ].slice(0, input.count);
+}, async ({ topic: topicName, userId, count }) => {
+    const topicsSnapshot = await adminDb.collection('topics')
+        .where('userId', '==', userId)
+        .where('title', '==', topicName)
+        .limit(1)
+        .get();
+        
+    if (topicsSnapshot.empty) {
+        return [];
+    }
+    const topicDoc = topicsSnapshot.docs[0];
+
+    const questionsSnapshot = await topicDoc.ref.collection('testQuestions').limit(count).get();
+    return questionsSnapshot.docs.map(doc => {
+        const data = doc.data() as TestQuestion;
+        return {
+            question: data.question,
+            answer: data.answer,
+            options: data.options || [],
+            topic: topicName,
+        };
+    });
 });
 
 const intelligentReviewFlow = ai.defineFlow({
@@ -99,25 +139,23 @@ const intelligentReviewFlow = ai.defineFlow({
   }, async (input) => {
     const performanceData = await getPerformanceData({userId: input.userId});
 
-    // Sort topics by performance in ascending order (lowest performance first).
     const sortedTopics = Object.entries(performanceData)
-      .sort(([, scoreA], [, scoreB]) => scoreA - scoreB)
+      .sort(([, scoreA], [, scoreB]) => Number(scoreA) - Number(scoreB))
       .map(([topic]) => topic);
 
-    const flashcards = [];
-    const testQuestions = [];
+    const flashcards: { question: string, answer: string, topic: string }[] = [];
+    const testQuestions: { question: string, answer: string, options: string[], topic: string }[] = [];
 
-    // Iterate through topics with the lowest performance and retrieve flashcards and test questions.
     for (const topic of sortedTopics) {
       if (flashcards.length < input.numFlashcards) {
         const numToFetch = input.numFlashcards - flashcards.length;
-        const topicFlashcards = await getFlashcardsByTopic({topic: topic, count: numToFetch});
+        const topicFlashcards = await getFlashcardsByTopic({topic, userId: input.userId, count: numToFetch});
         flashcards.push(...topicFlashcards);
       }
 
       if (testQuestions.length < input.numTestQuestions) {
         const numToFetch = input.numTestQuestions - testQuestions.length;
-        const topicTestQuestions = await getTestQuestionsByTopic({topic: topic, count: numToFetch});
+        const topicTestQuestions = await getTestQuestionsByTopic({topic, userId: input.userId, count: numToFetch});
         testQuestions.push(...topicTestQuestions);
       }
 
@@ -127,8 +165,8 @@ const intelligentReviewFlow = ai.defineFlow({
     }
 
     return {
-      flashcards: flashcards,
-      testQuestions: testQuestions,
+      flashcards,
+      testQuestions,
     };
   }
 );

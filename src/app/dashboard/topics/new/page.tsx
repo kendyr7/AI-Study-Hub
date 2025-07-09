@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState } from 'react';
@@ -11,9 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { summarizeText } from '@/ai/flows/summarize-text';
-import { generateFlashcards } from '@/ai/flows/generate-flashcards';
-import { generateTestQuestions } from '@/ai/flows/generate-test';
+import { createTopicAction } from '@/app/actions';
 
 export default function NewTopicPage() {
   const [title, setTitle] = useState('');
@@ -36,35 +32,21 @@ export default function NewTopicPage() {
     setIsLoading(true);
 
     try {
-      // In a real app, you'd save this to a database.
-      // For this prototype, we'll just generate the content and then redirect.
-      console.log("Creating new topic:", { title, tags, content });
+      // In a real app, you'd get the userId from an auth context.
+      const userId = 'user-123'; // Placeholder
+      
+      const result = await createTopicAction({ title, tags, content, userId });
 
-      const summaryPromise = summarizeText({ text: content });
-      const flashcardsPromise = generateFlashcards({ text: content });
-      const testPromise = generateTestQuestions({ text: content });
-
-      const [summaryResult, flashcardsResult, testResult] = await Promise.all([
-        summaryPromise,
-        flashcardsPromise,
-        testPromise,
-      ]);
-
-      console.log("Generated Summary:", summaryResult);
-      console.log("Generated Flashcards:", flashcardsResult);
-      console.log("Generated Test Questions:", testResult);
-
-      // We don't have a page to show the topic, so we'll just show a success toast and redirect.
-      toast({
-        title: "Topic Created!",
-        description: "Your new study topic has been generated.",
-      });
-
-      // Redirect to the dashboard after a short delay to allow toast to be seen
-      setTimeout(() => {
+      if (result.success) {
+        toast({
+          title: "Topic Created!",
+          description: "Your new study topic has been generated.",
+        });
+        // We will eventually redirect to the topic page, for now, redirect to the list.
         router.push('/dashboard/topics');
-      }, 1000);
-
+      } else {
+        throw new Error(result.error);
+      }
     } catch (error) {
       console.error("Failed to generate topic:", error);
       toast({
@@ -72,7 +54,8 @@ export default function NewTopicPage() {
         description: "Failed to generate the study topic. Please try again.",
         variant: "destructive",
       });
-      setIsLoading(false);
+    } finally {
+        setIsLoading(false);
     }
   };
 
