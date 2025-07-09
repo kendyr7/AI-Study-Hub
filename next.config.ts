@@ -31,6 +31,7 @@ const nextConfig: NextConfig = {
         net: false,
         dns: false,
         http2: false,
+        '@opentelemetry/exporter-jaeger': false,
       };
     }
     return config;

@@ -1,6 +1,8 @@
 import { adminDb } from "@/lib/firebase-server";
 import type { Topic, Folder } from "@/lib/types";
 import { TopicsView } from "./_components/topics-view";
+import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 async function getTopicsAndFolders(userId: string) {
     if (!adminDb) {
@@ -48,11 +50,27 @@ async function getTopicsAndFolders(userId: string) {
     return { topics, folders };
 }
 
+function TopicsViewSkeleton() {
+    return (
+        <div className="flex h-[calc(100vh-6rem)] w-full items-center justify-center">
+            <div className="flex items-center space-x-4">
+                <Skeleton className="h-12 w-12 rounded-full" />
+                <div className="space-y-2">
+                    <Skeleton className="h-4 w-[250px]" />
+                    <Skeleton className="h-4 w-[200px]" />
+                </div>
+            </div>
+        </div>
+    )
+}
+
 export default async function TopicsPage() {
     const userId = 'user-123';
     const { topics, folders } = await getTopicsAndFolders(userId);
 
     return (
-        <TopicsView initialTopics={topics} initialFolders={folders} />
+        <Suspense fallback={<TopicsViewSkeleton />}>
+            <TopicsView initialTopics={topics} initialFolders={folders} />
+        </Suspense>
     );
 }
