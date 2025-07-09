@@ -18,8 +18,9 @@ import { useToast } from '@/hooks/use-toast';
 import { createFolderAction } from '@/app/actions';
 import type { Folder } from '@/lib/types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import EmojiPicker, { Theme as EmojiTheme } from 'emoji-picker-react';
+import { useTheme } from '@/components/theme-provider';
 
-const emojis = ['😀', '🚀', '💡', '📚', '✅', '🧠', '✍️', '🎉', '🌟', '⚙️', '🔥', '🏆'];
 const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800', '#ff5722', '#795548', '#9e9e9e', '#607d8b'];
 
 
@@ -35,6 +36,7 @@ export function NewFolderDialog({ onFolderCreated, children }: NewFolderDialogPr
   const [color, setColor] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { theme } = useTheme();
 
   const handleCreateFolder = async () => {
     if (!name.trim()) {
@@ -90,15 +92,14 @@ export function NewFolderDialog({ onFolderCreated, children }: NewFolderDialogPr
                 <Popover>
                     <PopoverTrigger asChild>
                         <Button variant="outline" size="icon" className="shrink-0" disabled={isLoading}>
-                            {emoji ? <span>{emoji}</span> : <Smile className="h-4 w-4" />}
+                            {emoji ? <span className="text-xl">{emoji}</span> : <Smile className="h-4 w-4" />}
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-2">
-                        <div className="grid grid-cols-6 gap-1">
-                            {emojis.map(e => (
-                                <button key={e} onClick={() => setEmoji(e)} className="text-2xl rounded-md p-1 hover:bg-accent">{e}</button>
-                            ))}
-                        </div>
+                    <PopoverContent className="w-auto p-0 border-0">
+                        <EmojiPicker
+                          onEmojiClick={(emojiData) => setEmoji(emojiData.emoji)}
+                          theme={theme === 'dark' ? EmojiTheme.DARK : EmojiTheme.LIGHT}
+                        />
                     </PopoverContent>
                 </Popover>
                 <Input
