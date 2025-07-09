@@ -28,6 +28,7 @@ export async function summarizeText(input: SummarizeTextInput): Promise<Summariz
 
 const prompt = ai.definePrompt({
   name: 'summarizeTextPrompt',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: SummarizeTextInputSchema},
   output: {schema: SummarizeTextOutputSchema},
   prompt: `You are an expert summarizer. Please provide a concise summary of the following text:\n\n{{{text}}}`,

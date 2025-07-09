@@ -34,6 +34,7 @@ export async function generateTestQuestions(input: GenerateTestQuestionsInput): 
 
 const prompt = ai.definePrompt({
   name: 'generateTestQuestionsPrompt',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: GenerateTestQuestionsInputSchema},
   output: {schema: GenerateTestQuestionsOutputSchema},
   prompt: `You are an expert test question generator.  Given a block of text, generate a set of multiple choice and true/false questions to test the user's knowledge of the material.

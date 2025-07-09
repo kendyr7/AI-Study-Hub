@@ -35,6 +35,7 @@ export async function generateFlashcards(input: GenerateFlashcardsInput): Promis
 
 const prompt = ai.definePrompt({
   name: 'generateFlashcardsPrompt',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: GenerateFlashcardsInputSchema},
   output: {schema: GenerateFlashcardsOutputSchema},
   prompt: `You are an expert educator who can create flashcards from text.
