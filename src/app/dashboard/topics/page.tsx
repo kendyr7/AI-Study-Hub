@@ -16,14 +16,13 @@ async function getTopics(userId: string): Promise<Topic[]> {
 
   const topicsSnapshot = await adminDb.collection('topics')
     .where('userId', '==', userId)
-    .orderBy('createdAt', 'desc')
     .get();
   
   if (topicsSnapshot.empty) {
     return [];
   }
   
-  return topicsSnapshot.docs.map(doc => {
+  const topics = topicsSnapshot.docs.map(doc => {
     const data = doc.data();
     return {
       ...data,
@@ -33,6 +32,8 @@ async function getTopics(userId: string): Promise<Topic[]> {
       lastStudiedAt: data.lastStudiedAt ? data.lastStudiedAt.toDate() : undefined,
     } as Topic;
   });
+
+  return topics.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
 
 export default async function TopicsPage() {

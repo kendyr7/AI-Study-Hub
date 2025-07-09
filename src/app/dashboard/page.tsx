@@ -18,18 +18,16 @@ async function getDashboardData(userId: string) {
     
     const totalTopicsPromise = topicsRef.count().get();
     
-    const recentTopicsPromise = topicsRef
-        .orderBy('createdAt', 'desc')
-        .limit(5)
-        .get();
+    const allTopicsPromise = topicsRef.get();
 
-    const [totalTopicsSnapshot, recentTopicsSnapshot] = await Promise.all([
+    const [totalTopicsSnapshot, allTopicsSnapshot] = await Promise.all([
         totalTopicsPromise,
-        recentTopicsPromise,
+        allTopicsPromise,
     ]);
 
     const totalTopics = totalTopicsSnapshot.data().count;
-    const recentTopics = recentTopicsSnapshot.docs.map(doc => {
+    
+    const allTopics = allTopicsSnapshot.docs.map(doc => {
         const data = doc.data();
         return {
           ...data,
@@ -38,6 +36,10 @@ async function getDashboardData(userId: string) {
           lastStudiedAt: data.lastStudiedAt ? data.lastStudiedAt.toDate() : undefined,
         } as Topic;
     });
+
+    const recentTopics = allTopics
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0, 5);
 
     // Placeholder data for now
     const flashcardsStudied = 0;
