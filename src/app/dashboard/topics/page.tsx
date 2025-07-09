@@ -28,6 +28,7 @@ async function getTopicsAndFolders(userId: string) {
             summary: data.summary,
             order: data.order,
             status: data.status || 'active',
+            createdAt: data.createdAt.toDate(),
             archivedAt: data.archivedAt ? data.archivedAt.toDate() : undefined,
             lastStudiedAt: data.lastStudiedAt ? data.lastStudiedAt.toDate() : undefined,
         };
