@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { PlusCircle, Lightbulb, BookCopy, TestTube, ArrowRight } from "lucide-react";
-import { adminDb } from "@/lib/firebase";
+import { adminDb } from "@/lib/firebase-server";
 import type { Topic } from "@/lib/types";
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from "@/lib/utils";

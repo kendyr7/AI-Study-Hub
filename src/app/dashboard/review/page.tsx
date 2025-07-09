@@ -1,4 +1,4 @@
-import { adminDb } from "@/lib/firebase";
+import { adminDb } from "@/lib/firebase-server";
 import type { Topic } from "@/lib/types";
 import { ReviewClientPage } from "./_components/review-client-page";
 

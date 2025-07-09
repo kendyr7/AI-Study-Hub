@@ -19,6 +19,8 @@ const nextConfig: NextConfig = {
     ],
   },
   webpack: (config, { isServer }) => {
+    config.experiments = { ...config.experiments, asyncWebAssembly: true };
+
     if (!isServer) {
       // Exclude server-only modules from client-side bundle
       config.resolve.fallback = {

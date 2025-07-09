@@ -2,12 +2,28 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  GithubAuthProvider,
+  AuthError,
+} from "firebase/auth";
+
+import { auth } from "@/lib/firebase-client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Github, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
   signup?: boolean;
@@ -22,53 +38,132 @@ const GoogleIcon = () => (
     </svg>
 );
 
+const formSchema = z.object({
+    email: z.string().email({ message: "Please enter a valid email address." }),
+    password: z.string().min(6, { message: "Password must be at least 6 characters long." }),
+});
+
 
 export function UserAuthForm({ className, signup = false, ...props }: UserAuthFormProps) {
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const [isProviderLoading, setIsProviderLoading] = React.useState<string | null>(null);
   const router = useRouter();
+  const { toast } = useToast();
 
-  async function onSubmit(event: React.SyntheticEvent) {
-    event.preventDefault();
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const handleAuthError = (error: AuthError) => {
+    switch (error.code) {
+      case "auth/user-not-found":
+      case "auth/wrong-password":
+        return "Invalid email or password. Please try again.";
+      case "auth/email-already-in-use":
+        return "An account with this email already exists.";
+      case "auth/invalid-email":
+        return "Please enter a valid email address.";
+      case "auth/weak-password":
+        return "Password should be at least 6 characters.";
+      default:
+        return "An unexpected error occurred. Please try again.";
+    }
+  };
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      if (signup) {
+        await createUserWithEmailAndPassword(auth, values.email, values.password);
+      } else {
+        await signInWithEmailAndPassword(auth, values.email, values.password);
+      }
       router.push('/dashboard');
-    }, 1500);
+    } catch (error) {
+      const errorMessage = handleAuthError(error as AuthError);
+      toast({
+        title: signup ? "Sign Up Failed" : "Sign In Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
+  
+  const handleProviderSignIn = async (providerName: 'google' | 'github') => {
+    setIsProviderLoading(providerName);
+    const provider = providerName === 'google' ? new GoogleAuthProvider() : new GithubAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      router.push('/dashboard');
+    } catch (error) {
+      const errorMessage = handleAuthError(error as AuthError);
+      toast({
+        title: "Sign In Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsProviderLoading(null);
+    }
+  };
 
   return (
     <div className={cn("grid gap-6", className)} {...props}>
-      <form onSubmit={onSubmit}>
-        <div className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              placeholder="name@example.com"
-              type="email"
-              autoCapitalize="none"
-              autoComplete="email"
-              autoCorrect="off"
-              disabled={isLoading}
-              required
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              disabled={isLoading}
-              required
-            />
-          </div>
-          <Button disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {signup ? "Create Account" : "Sign In"}
-          </Button>
-        </div>
-      </form>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+            <div className="grid gap-4">
+                <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                    <FormItem className="grid gap-2">
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                        <Input
+                        placeholder="name@example.com"
+                        type="email"
+                        autoCapitalize="none"
+                        autoComplete="email"
+                        autoCorrect="off"
+                        disabled={isLoading || !!isProviderLoading}
+                        {...field}
+                        />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                    <FormItem className="grid gap-2">
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                        <Input
+                        type="password"
+                        autoComplete={signup ? "new-password" : "current-password"}
+                        disabled={isLoading || !!isProviderLoading}
+                        {...field}
+                        />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <Button disabled={isLoading || !!isProviderLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {signup ? "Create Account" : "Sign In"}
+                </Button>
+            </div>
+        </form>
+      </Form>
       <div className="relative">
         <Separator />
         <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs uppercase text-muted-foreground">
@@ -76,12 +171,12 @@ export function UserAuthForm({ className, signup = false, ...props }: UserAuthFo
         </span>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <Button variant="outline" type="button" disabled={isLoading}>
-          <Github className="mr-2 h-4 w-4" />
+        <Button variant="outline" type="button" disabled={isLoading || !!isProviderLoading} onClick={() => handleProviderSignIn('github')}>
+          {isProviderLoading === 'github' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Github className="mr-2 h-4 w-4" />}
           GitHub
         </Button>
-        <Button variant="outline" type="button" disabled={isLoading}>
-          <GoogleIcon />
+        <Button variant="outline" type="button" disabled={isLoading || !!isProviderLoading} onClick={() => handleProviderSignIn('google')}>
+           {isProviderLoading === 'google' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
           <span className="ml-2">Google</span>
         </Button>
       </div>

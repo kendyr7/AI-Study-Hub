@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
-import { adminDb } from "@/lib/firebase";
+import { adminDb } from "@/lib/firebase-server";
 import type { Topic, Folder } from "@/lib/types";
 import { TopicsList } from "./_components/topics-list";
 
@@ -28,7 +28,6 @@ async function getTopicsAndFolders(userId: string) {
             summary: data.summary,
             order: data.order,
             status: data.status || 'active',
-            createdAt: data.createdAt.toDate(),
             archivedAt: data.archivedAt ? data.archivedAt.toDate() : undefined,
             lastStudiedAt: data.lastStudiedAt ? data.lastStudiedAt.toDate() : undefined,
         };

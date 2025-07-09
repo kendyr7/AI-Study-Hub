@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +17,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Settings, CircleUser, LogOut, Menu } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase-client';
 
 function NavItem({ href, children }: { href: string, children: React.ReactNode }) {
     const pathname = usePathname();
@@ -54,6 +56,16 @@ function MobileNavItem({ href, children, onClick }: { href: string, children: Re
 
 export function Header() {
   const [open, setOpen] = React.useState(false);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+        await signOut(auth);
+        router.push('/');
+    } catch (error) {
+        console.error("Error signing out:", error);
+    }
+  };
   
   const navItems = [
       { href: "/dashboard", label: "Dashboard" },
@@ -130,8 +142,8 @@ export function Header() {
               <Link href="/dashboard/settings"><Settings className="mr-2" />Settings</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/"><LogOut className="mr-2" />Logout</Link>
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className="mr-2" />Logout
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

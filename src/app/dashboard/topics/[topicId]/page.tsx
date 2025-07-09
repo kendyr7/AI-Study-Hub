@@ -1,4 +1,4 @@
-import { adminDb } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-server';
 import type { Topic, Flashcard, TestQuestion } from '@/lib/types';
 import { notFound } from 'next/navigation';
 import { TopicDetailsTabs } from './_components/topic-details-tabs';

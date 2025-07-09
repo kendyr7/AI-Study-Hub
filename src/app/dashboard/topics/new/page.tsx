@@ -1,4 +1,4 @@
-import { adminDb } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-server';
 import type { Folder } from '@/lib/types';
 import { NewTopicForm } from './_components/new-topic-form';
 

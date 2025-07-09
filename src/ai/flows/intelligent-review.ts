@@ -9,7 +9,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { adminDb } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-server';
 import type { Flashcard, TestQuestion, Topic } from '@/lib/types';
 
 

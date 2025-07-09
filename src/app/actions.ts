@@ -1,7 +1,7 @@
 'use server';
 
 import admin from 'firebase-admin';
-import { adminDb } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-server';
 import type { Topic, Flashcard, TestQuestion, Folder } from '@/lib/types';
 import { summarizeText } from '@/ai/flows/summarize-text';
 import { generateFlashcards } from '@/ai/flows/generate-flashcards';
