@@ -45,13 +45,17 @@ export default function NewTopicPage() {
         // We will eventually redirect to the topic page, for now, redirect to the list.
         router.push('/dashboard/topics');
       } else {
-        throw new Error(result.error);
+        toast({
+          title: "Error Creating Topic",
+          description: result.error || "An unknown server error occurred.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Failed to generate topic:", error);
       toast({
         title: "Error",
-        description: "Failed to generate the study topic. Please try again.",
+        description: "A network error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
