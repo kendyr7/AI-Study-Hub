@@ -1,5 +1,4 @@
-// NOTE: The 'use client' directive is not necessary for this component as it only uses other client components.
-// It will be treated as a client component by default when used inside a client component tree.
+'use client';
 
 import {
   Sidebar,
@@ -22,16 +21,11 @@ import { Logo } from '@/components/logo';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
-
-// A simple hook to simulate path checking
-const useIsActivePath = (path: string) => {
-    // In a real app, you would use `usePathname` from `next/navigation`
-    // For this static generation, we'll just make Dashboard active.
-    return path === '/dashboard';
-}
+import { usePathname } from 'next/navigation';
 
 function NavLink({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
-    const isActive = useIsActivePath(href);
+    const pathname = usePathname();
+    const isActive = pathname === href;
     return (
         <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={isActive} tooltip={label}>
