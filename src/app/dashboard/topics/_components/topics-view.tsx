@@ -10,10 +10,10 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { updateItemsOrderAction } from '@/app/actions';
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { FolderPlus, Inbox, PlusCircle, Archive, Folder as FolderIcon, Settings } from 'lucide-react';
+import { FolderPlus, Inbox, PlusCircle, Archive, Folder as FolderIcon, Settings, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { TopicsList } from './topics-list';
@@ -74,7 +74,7 @@ function FolderSidebar({
                                     >
                                         <span className="mr-2 h-4 w-4 flex items-center justify-center">
                                             {folder.emoji ? (
-                                                <span>{folder.emoji}</span>
+                                                <span className="text-base">{folder.emoji}</span>
                                             ) : (
                                                 <FolderIcon style={{color: folder.color}}/>
                                             )}
@@ -251,9 +251,19 @@ export function TopicsView({ initialTopics, initialFolders }: { initialTopics: T
     const topicListPanel = (
          <div className="flex flex-col h-full p-2">
             <div className="flex items-center justify-between p-2">
-                <div>
-                     <h1 className="text-xl font-bold tracking-tight font-headline">My Topics</h1>
-                    <p className="text-muted-foreground text-sm">Organize your study materials.</p>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="sm:hidden"
+                        onClick={() => updateQueryParam('folderId', null)}
+                    >
+                        <ArrowLeft />
+                    </Button>
+                     <div>
+                        <h1 className="text-xl font-bold tracking-tight font-headline">My Topics</h1>
+                        <p className="text-muted-foreground text-sm">Organize your study materials.</p>
+                     </div>
                 </div>
                 <Button asChild>
                     <Link href="/dashboard/topics/new">
@@ -282,15 +292,14 @@ export function TopicsView({ initialTopics, initialFolders }: { initialTopics: T
     );
 
     if (isMobile) {
-        return (
-            <div className="h-[calc(100vh-5rem)]">
-                {!selectedTopicId ? (
-                     <div className={cn(selectedFolderId && "hidden", "sm:hidden")}>
-                        {folderSidebar}
-                    </div>
-                ) : null}
+        const mobileFolderId = searchParams.get('folderId');
 
-                <div className={cn(!selectedFolderId && "hidden", "sm:block h-full")}>
+        return (
+            <div className="h-[calc(100vh-5rem)] relative overflow-hidden">
+                <div className={cn("absolute inset-0 transition-transform duration-300", mobileFolderId ? "-translate-x-full" : "translate-x-0")}>
+                    {folderSidebar}
+                </div>
+                <div className={cn("absolute inset-0 transition-transform duration-300", mobileFolderId ? "translate-x-0" : "translate-x-full")}>
                     {topicListPanel}
                 </div>
                 
