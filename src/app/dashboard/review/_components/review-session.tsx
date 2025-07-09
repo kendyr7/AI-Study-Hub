@@ -5,8 +5,8 @@ import type { ReviewItem } from './review-client-page';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { FlashcardViewer } from '@/app/dashboard/topics/[topicId]/_components/flashcard-viewer';
-import { PracticeTest } from '@/app/dashboard/topics/[topicId]/_components/practice-test';
+import { FlashcardViewer } from '@/components/study/flashcard-viewer';
+import { PracticeTest } from '@/components/study/practice-test';
 import type { Flashcard, TestQuestion } from '@/lib/types';
 import { CheckCircle, Repeat } from 'lucide-react';
 
