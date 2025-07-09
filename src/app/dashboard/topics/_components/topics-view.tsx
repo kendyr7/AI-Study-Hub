@@ -26,13 +26,15 @@ function FolderSidebar({
     selectedFolderId, 
     onSelectFolder,
     onFolderCreated,
-    uncategorizedCount
+    uncategorizedCount,
+    getTopicCountForFolder
 }: {
     folders: Folder[], 
     selectedFolderId: string | null,
     onSelectFolder: (id: string) => void,
     onFolderCreated: (newFolder: Folder) => void,
-    uncategorizedCount: number
+    uncategorizedCount: number,
+    getTopicCountForFolder: (folderId: string) => number,
 }) {
     return (
         <div className="flex flex-col h-full bg-card/30 p-2">
@@ -63,8 +65,16 @@ function FolderSidebar({
                                 className="w-full justify-start"
                                 onClick={() => onSelectFolder(folder.id)}
                             >
-                                <FolderIcon className="mr-2 h-4 w-4" />
+                                <span className="mr-2 h-4 w-4 flex items-center justify-center">
+                                    {folder.emoji ? (
+                                        <span>{folder.emoji}</span>
+                                    ) : (
+                                        <FolderIcon style={{color: folder.color}}/>
+                                    )}
+                                </span>
+
                                 <span className="truncate">{folder.name}</span>
+                                <span className="ml-auto text-xs text-muted-foreground">{getTopicCountForFolder(folder.id)}</span>
                             </Button>
                         ))}
                     </nav>
@@ -132,7 +142,7 @@ export function TopicsView({ initialTopics, initialFolders }: { initialTopics: T
     };
 
     const onFolderCreated = (newFolder: Folder) => {
-        setFolders(current => [...current, newFolder]);
+        setFolders(current => [...current, newFolder].sort((a,b) => a.order - b.order));
         onSelectFolder(newFolder.id);
     };
 
@@ -173,9 +183,14 @@ export function TopicsView({ initialTopics, initialFolders }: { initialTopics: T
     };
 
     const topicsForSelectedFolder = useMemo(() => {
-        const filtered = topics.filter(t => (t.folderId || UNCATEGORIZED_ID) === selectedFolderId);
+        const currentFolder = selectedFolderId === UNCATEGORIZED_ID ? null : selectedFolderId;
+        const filtered = topics.filter(t => t.folderId === currentFolder);
         return filtered.sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
     }, [selectedFolderId, topics]);
+
+    const getTopicCountForFolder = (folderId: string) => {
+        return topics.filter(topic => topic.folderId === folderId).length;
+    };
 
     const uncategorizedCount = useMemo(() => topics.filter(t => !t.folderId).length, [topics]);
 
@@ -186,6 +201,7 @@ export function TopicsView({ initialTopics, initialFolders }: { initialTopics: T
             onSelectFolder={onSelectFolder}
             onFolderCreated={onFolderCreated}
             uncategorizedCount={uncategorizedCount}
+            getTopicCountForFolder={getTopicCountForFolder}
         />
     );
 

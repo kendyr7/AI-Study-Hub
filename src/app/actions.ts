@@ -208,12 +208,12 @@ export async function updateTopicSummaryAction(formData: { topicId: string; summ
   }
 }
 
-export async function createFolderAction(formData: { name: string; userId: string }) {
+export async function createFolderAction(formData: { name: string; userId: string; color?: string; emoji?: string }) {
     if (!adminDb) {
       return { success: false, error: "Database not configured." };
     }
   
-    const { name, userId } = formData;
+    const { name, userId, color, emoji } = formData;
     try {
       const foldersQuery = adminDb.collection('folders').where('userId', '==', userId);
       const foldersSnapshot = await foldersQuery.count().get();
@@ -224,6 +224,8 @@ export async function createFolderAction(formData: { name: string; userId: strin
         userId,
         name,
         order,
+        color,
+        emoji,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       };
       await folderRef.set(newFolder);
@@ -233,6 +235,8 @@ export async function createFolderAction(formData: { name: string; userId: strin
         userId,
         name,
         order,
+        color,
+        emoji,
         createdAt: new Date()
       };
 
@@ -358,6 +362,7 @@ export async function getTopicDetailsAction(payload: { topicId: string }) {
             order: rawData.order,
             status: rawData.status,
             createdAt: rawData.createdAt.toDate(),
+            folderId: rawData.folderId || null,
             lastStudiedAt: rawData.lastStudiedAt ? rawData.lastStudiedAt.toDate() : undefined,
             archivedAt: rawData.archivedAt ? rawData.archivedAt.toDate() : undefined,
         };

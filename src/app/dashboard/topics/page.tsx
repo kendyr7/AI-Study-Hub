@@ -41,6 +41,8 @@ async function getTopicsAndFolders(userId: string) {
             name: data.name,
             order: data.order,
             createdAt: data.createdAt.toDate(),
+            color: data.color || undefined,
+            emoji: data.emoji || undefined,
         };
     });
 
