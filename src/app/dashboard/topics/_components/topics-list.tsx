@@ -231,11 +231,11 @@ export function TopicsList({ initialTopics, initialFolders }: { initialTopics: T
           <SortableContext items={folders.map(f => f.id)} strategy={verticalListSortingStrategy}>
             <Accordion type="multiple" className="space-y-4">
               {folders.map(folder => (
-                <FolderItem key={folder.id} folder={folder}>
+                <FolderItem key={folder.id} folder={folder} disabled={!isMounted}>
                   <SortableContext items={(items[folder.id] as Topic[]).map(t => t.id)} strategy={verticalListSortingStrategy}>
                     <div className="space-y-2 p-4 pt-0">
                       {(items[folder.id] as Topic[]).map(topic => (
-                          <TopicItem key={topic.id} topic={topic} />
+                          <TopicItem key={topic.id} topic={topic} disabled={!isMounted} />
                       ))}
                       {(items[folder.id] as Topic[]).length === 0 && (
                           <p className="text-sm text-muted-foreground text-center py-4">Drag topics here to add them to this folder.</p>
@@ -252,7 +252,7 @@ export function TopicsList({ initialTopics, initialFolders }: { initialTopics: T
             <SortableContext items={(items[UNCAT_FOLDER_ID] as Topic[]).map(t => t.id)} strategy={verticalListSortingStrategy}>
                 <div className="space-y-2 p-4 pt-0">
                 {(items[UNCAT_FOLDER_ID] as Topic[]).map(topic => (
-                    <TopicItem key={topic.id} topic={topic} />
+                    <TopicItem key={topic.id} topic={topic} disabled={!isMounted} />
                 ))}
                 </div>
             </SortableContext>

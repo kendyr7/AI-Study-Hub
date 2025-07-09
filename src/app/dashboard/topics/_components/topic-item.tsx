@@ -43,7 +43,7 @@ export function TopicCard({ topic, isOverlay = false }: { topic: Topic, isOverla
     );
 }
 
-export function TopicItem({ topic }: { topic: Topic }) {
+export function TopicItem({ topic, disabled }: { topic: Topic, disabled?: boolean }) {
   const {
     attributes,
     listeners,
@@ -51,7 +51,7 @@ export function TopicItem({ topic }: { topic: Topic }) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: topic.id });
+  } = useSortable({ id: topic.id, disabled });
 
   const style = {
     transform: CSS.Transform.toString(transform),

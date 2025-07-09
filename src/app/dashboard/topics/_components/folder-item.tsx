@@ -24,7 +24,7 @@ export function FolderContainer({ id, children }: { id: string, children: React.
 }
 
 
-export function FolderItem({ folder, children }: { folder: Folder, children: React.ReactNode }) {
+export function FolderItem({ folder, children, disabled }: { folder: Folder, children: React.ReactNode, disabled?: boolean }) {
   const {
     attributes,
     listeners,
@@ -33,9 +33,9 @@ export function FolderItem({ folder, children }: { folder: Folder, children: Rea
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: folder.id });
+  } = useSortable({ id: folder.id, disabled });
 
-  const { setNodeRef: setDroppableRef, isOver } = useDroppable({ id: folder.id });
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({ id: folder.id, disabled });
 
   const style = {
     transform: CSS.Transform.toString(transform),
