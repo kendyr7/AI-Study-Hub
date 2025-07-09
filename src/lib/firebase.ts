@@ -17,27 +17,36 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // Server-side Firebase Admin config
-function getAdminApp() {
+function initializeAdminApp() {
   if (admin.apps.length > 0) {
     return admin.app();
   }
 
   if (!process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
-    throw new Error('FIREBASE_SERVICE_ACCOUNT_BASE64 is not set in .env file');
+    console.warn(
+      'FIREBASE_SERVICE_ACCOUNT_BASE64 is not set. Firebase Admin features will be disabled.'
+    );
+    return null;
   }
 
-  const serviceAccountString = Buffer.from(
-    process.env.FIREBASE_SERVICE_ACCOUNT_BASE64,
-    'base64'
-  ).toString('utf-8');
+  try {
+    const serviceAccountString = Buffer.from(
+      process.env.FIREBASE_SERVICE_ACCOUNT_BASE64,
+      'base64'
+    ).toString('utf-8');
 
-  const serviceAccount = JSON.parse(serviceAccountString);
+    const serviceAccount = JSON.parse(serviceAccountString);
 
-  return admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
+    return admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+  } catch (error: any) {
+    console.error('Failed to initialize Firebase Admin SDK:', error.message);
+    return null;
+  }
 }
 
-const adminDb = admin.firestore(getAdminApp());
+const adminApp = initializeAdminApp();
+const adminDb = adminApp ? admin.firestore(adminApp) : null;
 
 export { app, db, adminDb };

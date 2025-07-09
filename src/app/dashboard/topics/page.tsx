@@ -9,6 +9,11 @@ import type { Topic } from "@/lib/types";
 import { formatDistanceToNow } from 'date-fns';
 
 async function getTopics(userId: string): Promise<Topic[]> {
+  if (!adminDb) {
+    console.warn("Firebase Admin not initialized, topics list will be empty.");
+    return [];
+  }
+
   const topicsSnapshot = await adminDb.collection('topics')
     .where('userId', '==', userId)
     .orderBy('createdAt', 'desc')

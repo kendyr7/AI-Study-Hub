@@ -51,6 +51,10 @@ const getPerformanceData = ai.defineTool({
   }),
   outputSchema: z.record(z.string()).describe('A map of topic name to performance score (0-100).'),
 }, async ({ userId }) => {
+  if (!adminDb) {
+    console.warn("Firebase Admin not initialized, cannot get performance data.");
+    return {};
+  }
   // In a real app, this would be a complex query based on test results.
   // For now, we'll return some mock data.
   // We'll fetch the user's topics and assign random scores.
@@ -77,6 +81,10 @@ const getFlashcardsByTopic = ai.defineTool({
   }),
   outputSchema: z.array(FlashcardSchema).describe('An array of flashcards for the given topic.'),
 }, async ({ topic: topicName, userId, count }) => {
+    if (!adminDb) {
+      console.warn("Firebase Admin not initialized, cannot get flashcards.");
+      return [];
+    }
     const topicsSnapshot = await adminDb.collection('topics')
         .where('userId', '==', userId)
         .where('title', '==', topicName)
@@ -109,6 +117,10 @@ const getTestQuestionsByTopic = ai.defineTool({
   }),
   outputSchema: z.array(TestQuestionSchema).describe('An array of test questions for the given topic.'),
 }, async ({ topic: topicName, userId, count }) => {
+    if (!adminDb) {
+      console.warn("Firebase Admin not initialized, cannot get test questions.");
+      return [];
+    }
     const topicsSnapshot = await adminDb.collection('topics')
         .where('userId', '==', userId)
         .where('title', '==', topicName)

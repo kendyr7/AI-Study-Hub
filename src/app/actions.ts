@@ -7,6 +7,11 @@ import { generateFlashcards } from '@/ai/flows/generate-flashcards';
 import { generateTestQuestions } from '@/ai/flows/generate-test';
 
 export async function createTopicAction(formData: { title: string; tags: string; content: string; userId: string; }) {
+  if (!adminDb) {
+    console.error("Firebase Admin not initialized. Cannot create topic.");
+    return { success: false, error: "Database not configured. Please set FIREBASE_SERVICE_ACCOUNT_BASE64 in your environment variables." };
+  }
+  
   const { title, tags, content, userId } = formData;
 
   try {

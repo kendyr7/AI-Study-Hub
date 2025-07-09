@@ -9,6 +9,11 @@ import type { Topic } from "@/lib/types";
 import { formatDistanceToNow } from 'date-fns';
 
 async function getDashboardData(userId: string) {
+    if (!adminDb) {
+        console.warn("Firebase Admin not initialized, dashboard data will be empty.");
+        return { totalTopics: 0, flashcardsStudied: 0, avgTestScore: 'N/A', recentTopics: [], weakTopics: [] };
+    }
+
     const topicsRef = adminDb.collection('topics').where('userId', '==', userId);
     
     const totalTopicsPromise = topicsRef.count().get();
@@ -37,7 +42,7 @@ async function getDashboardData(userId: string) {
     // Placeholder data for now
     const flashcardsStudied = 0;
     const avgTestScore = 'N/A';
-    const weakTopics = ["Cellular Biology", "Quantum Mechanics"]; // This will come from intelligent review later
+    const weakTopics: string[] = []; // This will come from intelligent review later
 
     return { totalTopics, flashcardsStudied, avgTestScore, recentTopics, weakTopics };
 }
