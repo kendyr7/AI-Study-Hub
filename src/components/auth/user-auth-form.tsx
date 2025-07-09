@@ -69,14 +69,24 @@ export function UserAuthForm({ className, signup = false, ...props }: UserAuthFo
         return "Please enter a valid email address.";
       case "auth/weak-password":
         return "Password should be at least 6 characters.";
+      case "auth/invalid-api-key":
+        return "Firebase API Key is invalid. Please check your project configuration.";
+      case "auth/network-request-failed":
+        return "A network error occurred. Please check your internet connection and try again.";
+      case "auth/popup-closed-by-user":
+        return "The sign-in window was closed. Please try again.";
       default:
-        return "An unexpected error occurred. Please try again.";
+        console.error("Firebase Auth Error:", error);
+        return `An unexpected error occurred: ${error.code}.`;
     }
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
+      if (!auth) {
+        throw new Error("Firebase is not configured correctly on the client.");
+      }
       if (signup) {
         await createUserWithEmailAndPassword(auth, values.email, values.password);
       } else {
@@ -84,12 +94,17 @@ export function UserAuthForm({ className, signup = false, ...props }: UserAuthFo
       }
       router.push('/dashboard');
     } catch (error) {
-      const errorMessage = handleAuthError(error as AuthError);
-      toast({
-        title: signup ? "Sign Up Failed" : "Sign In Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+        let errorMessage = "An unexpected error occurred. Please try again.";
+        if (error instanceof AuthError) {
+          errorMessage = handleAuthError(error);
+        } else if (error instanceof Error) {
+            errorMessage = error.message;
+        }
+        toast({
+            title: signup ? "Sign Up Failed" : "Sign In Failed",
+            description: errorMessage,
+            variant: "destructive",
+        });
     } finally {
       setIsLoading(false);
     }
@@ -99,15 +114,23 @@ export function UserAuthForm({ className, signup = false, ...props }: UserAuthFo
     setIsProviderLoading(providerName);
     const provider = providerName === 'google' ? new GoogleAuthProvider() : new GithubAuthProvider();
     try {
+       if (!auth) {
+        throw new Error("Firebase is not configured correctly on the client.");
+      }
       await signInWithPopup(auth, provider);
       router.push('/dashboard');
     } catch (error) {
-      const errorMessage = handleAuthError(error as AuthError);
-      toast({
-        title: "Sign In Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+        let errorMessage = "An unexpected error occurred. Please try again.";
+        if (error instanceof AuthError) {
+          errorMessage = handleAuthError(error);
+        } else if (error instanceof Error) {
+            errorMessage = error.message;
+        }
+        toast({
+            title: "Sign In Failed",
+            description: errorMessage,
+            variant: "destructive",
+        });
     } finally {
       setIsProviderLoading(null);
     }
