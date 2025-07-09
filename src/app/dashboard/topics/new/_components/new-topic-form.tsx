@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,12 +14,13 @@ import {
     SelectTrigger,
     SelectValue,
   } from "@/components/ui/select";
-import { Loader2, Sparkles, FolderPlus } from 'lucide-react';
+import { Sparkles, FolderPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { createTopicAction } from '@/app/actions';
 import type { Folder } from '@/lib/types';
 import { NewFolderDialog } from '../../_components/new-folder-dialog';
 import { TagInput } from '@/components/ui/tag-input';
+import { LoadingOverlay } from '@/components/ui/loading-overlay';
 
 interface NewTopicFormProps {
   folders: Folder[];
@@ -33,8 +34,21 @@ export function NewTopicForm({ folders: initialFolders, allTags }: NewTopicFormP
   const [folders, setFolders] = useState<Folder[]>(initialFolders);
   const [folderId, setFolderId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const router = useRouter();
   const { toast } = useToast();
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isLoading && progress < 90) {
+      timer = setTimeout(() => {
+        setProgress(p => p + 1);
+      }, 100); // Adjust timing to feel right, e.g., 10 seconds to reach 90%
+    }
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [isLoading, progress]);
 
   const handleFolderCreated = (newFolder: Folder) => {
     setFolders(currentFolders => [...currentFolders, newFolder]);
@@ -52,20 +66,27 @@ export function NewTopicForm({ folders: initialFolders, allTags }: NewTopicFormP
       return;
     }
     setIsLoading(true);
+    setProgress(0);
 
     try {
       // In a real app, you'd get the userId from an auth context.
       const userId = 'user-123'; // Placeholder
       
       const result = await createTopicAction({ title, tags: tags.join(','), content, userId, folderId });
+      
+      setProgress(100);
 
       if (result.success && result.topicId) {
         toast({
           title: "Topic Created!",
           description: "Your new study topic has been generated.",
         });
-        router.push(`/dashboard/topics?topicId=${result.topicId}`);
+        // A brief delay to let the user see the 100% state
+        setTimeout(() => {
+            router.push(`/dashboard/topics?topicId=${result.topicId}`);
+        }, 500);
       } else {
+        setIsLoading(false);
         toast({
           title: "Error Creating Topic",
           description: result.error || "An unknown server error occurred.",
@@ -74,17 +95,18 @@ export function NewTopicForm({ folders: initialFolders, allTags }: NewTopicFormP
       }
     } catch (error: any) {
       console.error("Failed to generate topic:", error);
+      setIsLoading(false);
       toast({
         title: "Error Creating Topic",
         description: error.message || "A network error occurred. Please try again.",
         variant: "destructive",
       });
-    } finally {
-        setIsLoading(false);
     }
   };
 
   return (
+    <>
+      <LoadingOverlay isLoading={isLoading} progress={progress} />
       <Card>
         <CardHeader>
           <CardTitle>Create Topic</CardTitle>
@@ -156,21 +178,13 @@ export function NewTopicForm({ folders: initialFolders, allTags }: NewTopicFormP
             </div>
             <div className="flex justify-end">
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Generate Topic
-                  </>
-                )}
+                <Sparkles className="mr-2 h-4 w-4" />
+                Generate Topic
               </Button>
             </div>
           </form>
         </CardContent>
       </Card>
+    </>
   );
 }
