@@ -10,14 +10,13 @@ async function getFolders(userId: string): Promise<Folder[]> {
 
   const foldersSnapshot = await adminDb.collection('folders')
     .where('userId', '==', userId)
-    .orderBy('order')
     .get();
   
   if (foldersSnapshot.empty) {
     return [];
   }
   
-  return foldersSnapshot.docs.map(doc => {
+  const folders = foldersSnapshot.docs.map(doc => {
     const data = doc.data();
     return {
       id: doc.id,
@@ -27,6 +26,10 @@ async function getFolders(userId: string): Promise<Folder[]> {
       createdAt: data.createdAt.toDate(),
     };
   });
+
+  // Sort in application code to avoid needing a composite index
+  folders.sort((a, b) => a.order - b.order);
+  return folders;
 }
 
 export default async function NewTopicPage() {

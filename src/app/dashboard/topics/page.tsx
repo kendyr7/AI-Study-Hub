@@ -11,8 +11,8 @@ async function getTopicsAndFolders(userId: string) {
         return { topics: [], folders: [] };
     }
 
-    const topicsPromise = adminDb.collection('topics').where('userId', '==', userId).orderBy('order').get();
-    const foldersPromise = adminDb.collection('folders').where('userId', '==', userId).orderBy('order').get();
+    const topicsPromise = adminDb.collection('topics').where('userId', '==', userId).get();
+    const foldersPromise = adminDb.collection('folders').where('userId', '==', userId).get();
 
     const [topicsSnapshot, foldersSnapshot] = await Promise.all([topicsPromise, foldersPromise]);
 
@@ -42,6 +42,10 @@ async function getTopicsAndFolders(userId: string) {
             createdAt: data.createdAt.toDate(),
         };
     });
+
+    // Sort in application code to avoid needing a composite index
+    topics.sort((a, b) => a.order - b.order);
+    folders.sort((a, b) => a.order - b.order);
 
     return { topics, folders };
 }
