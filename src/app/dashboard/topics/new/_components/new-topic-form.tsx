@@ -147,7 +147,7 @@ export function NewTopicForm({ folders: initialFolders, allTags }: NewTopicFormP
               <Textarea 
                 id="content"
                 placeholder="Paste your article, notes, or any text here..."
-                className="min-h-[300px]"
+                className="min-h-[200px] md:min-h-[300px]"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 disabled={isLoading}

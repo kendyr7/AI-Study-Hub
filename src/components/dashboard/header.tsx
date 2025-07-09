@@ -68,7 +68,7 @@ export function Header() {
   ]
 
   return (
-    <header className="sticky top-4 z-50 w-[calc(100%-2rem)] mx-auto flex h-20 items-center justify-between gap-4 rounded-2xl border border-white/10 bg-background/50 px-6 backdrop-blur-xl md:w-[calc(100%-3rem)]">
+    <header className="sticky top-0 z-50 flex h-20 w-full items-center justify-between gap-4 border-b border-white/10 bg-background/50 px-4 backdrop-blur-xl md:top-4 md:mx-auto md:w-[calc(100%-3rem)] md:rounded-2xl md:border md:px-6">
       <div className="flex items-center gap-6">
         <div className="md:hidden">
             <Sheet open={open} onOpenChange={setOpen}>
@@ -78,7 +78,7 @@ export function Header() {
                         <span className="sr-only">Toggle Menu</span>
                     </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="bg-background/80 backdrop-blur-xl border-r-white/10 flex flex-col p-0">
+                <SheetContent side="left" className="flex flex-col border-r-white/10 bg-background/80 p-0 backdrop-blur-xl">
                     <SheetHeader className="border-b border-white/10 p-4">
                         <SheetTitle><Logo /></SheetTitle>
                     </SheetHeader>

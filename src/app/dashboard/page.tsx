@@ -7,6 +7,7 @@ import { PlusCircle, Lightbulb, BookCopy, TestTube, ArrowRight } from "lucide-re
 import { adminDb } from "@/lib/firebase";
 import type { Topic } from "@/lib/types";
 import { formatDistanceToNow } from 'date-fns';
+import { cn } from "@/lib/utils";
 
 async function getDashboardData(userId: string) {
     if (!adminDb) {
@@ -81,7 +82,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard 
           title="Topics Created" 
           value={totalTopics.toString()}
@@ -99,7 +100,7 @@ export default async function DashboardPage() {
         />
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Recent Topics</CardTitle>
@@ -180,31 +181,58 @@ function RecentTopicsTable({ topics }: { topics: Topic[] }) {
         )
     }
   return (
-    <Table>
-      <TableHeader>
-        <TableRow className="border-white/10">
-          <TableHead>Topic</TableHead>
-          <TableHead>Tags</TableHead>
-          <TableHead className="text-right">Created</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {topics.map((topic) => (
-            <TableRow key={topic.id} className="border-white/10">
-                <TableCell className="font-medium">
-                    <Link href={`/dashboard/topics/${topic.id}`} className="hover:text-primary transition-colors">{topic.title}</Link>
-                </TableCell>
-                <TableCell>
-                    <div className="flex gap-1">
-                        {topic.tags.map(tag => <Badge key={tag} variant="secondary" className="border border-white/10">{tag}</Badge>)}
-                    </div>
-                </TableCell>
-                <TableCell className="text-right text-muted-foreground">
-                    {formatDistanceToNow(topic.createdAt, { addSuffix: true })}
-                </TableCell>
-            </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <>
+        {/* Mobile View: List of Cards */}
+        <div className="space-y-4 md:hidden">
+            {topics.map((topic) => (
+                <Link key={topic.id} href={`/dashboard/topics/${topic.id}`} className="block">
+                    <Card className="transition-colors hover:bg-muted/20">
+                        <CardContent className="flex items-start justify-between p-4">
+                           <div>
+                                <p className="font-semibold">{topic.title}</p>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    {formatDistanceToNow(topic.createdAt, { addSuffix: true })}
+                                </p>
+                                <div className="mt-2 flex flex-wrap gap-1">
+                                    {topic.tags.map(tag => <Badge key={tag} variant="secondary" className="border border-white/10">{tag}</Badge>)}
+                                </div>
+                           </div>
+                           <ArrowRight className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
+                        </CardContent>
+                    </Card>
+                </Link>
+            ))}
+        </div>
+
+        {/* Desktop View: Table */}
+        <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-white/10">
+                  <TableHead>Topic</TableHead>
+                  <TableHead>Tags</TableHead>
+                  <TableHead className="text-right">Created</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {topics.map((topic) => (
+                    <TableRow key={topic.id} className="border-white/10">
+                        <TableCell className="font-medium">
+                            <Link href={`/dashboard/topics/${topic.id}`} className="transition-colors hover:text-primary">{topic.title}</Link>
+                        </TableCell>
+                        <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                                {topic.tags.map(tag => <Badge key={tag} variant="secondary" className="border border-white/10">{tag}</Badge>)}
+                            </div>
+                        </TableCell>
+                        <TableCell className="text-right text-muted-foreground">
+                            {formatDistanceToNow(topic.createdAt, { addSuffix: true })}
+                        </TableCell>
+                    </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+        </div>
+    </>
   );
 }

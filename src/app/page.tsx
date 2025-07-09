@@ -19,7 +19,7 @@ export default function LandingPage() {
         </nav>
       </header>
       <main className="flex-grow">
-        <section className="container mx-auto px-4 sm:px-6 lg:px-8 text-center py-20 md:py-32">
+        <section className="container mx-auto px-4 sm:px-6 lg:px-8 text-center py-16 sm:py-20 md:py-28">
           <div className="inline-flex items-center rounded-lg bg-muted px-3 py-1 text-sm mb-6 border border-white/10">
             <Sparkles className="h-4 w-4 mr-2 text-primary" />
             Powered by Gemini
@@ -35,7 +35,7 @@ export default function LandingPage() {
           </Button>
         </section>
 
-        <section id="features" className="py-20 md:py-32">
+        <section id="features" className="py-16 sm:py-20 md:py-28">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-headline font-bold">A Smarter Way to Study</h2>

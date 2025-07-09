@@ -67,8 +67,8 @@ function DraggableFlashcard({
         onClick={handleFlip}
       >
         <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
-          <div style={{ opacity: recapOpacity }} className="text-red-500 font-bold text-2xl border-2 border-red-500 p-2 rounded-lg -rotate-12 bg-card/80">RECAP</div>
-          <div style={{ opacity: learnedOpacity }} className="text-green-500 font-bold text-2xl border-2 border-green-500 p-2 rounded-lg rotate-12 bg-card/80">LEARNED</div>
+          <div style={{ opacity: recapOpacity }} className="text-red-500 font-bold text-xl sm:text-2xl border-2 border-red-500 p-2 rounded-lg -rotate-12 bg-card/80">RECAP</div>
+          <div style={{ opacity: learnedOpacity }} className="text-green-500 font-bold text-xl sm:text-2xl border-2 border-green-500 p-2 rounded-lg rotate-12 bg-card/80">LEARNED</div>
         </div>
 
         <div
@@ -77,11 +77,11 @@ function DraggableFlashcard({
         >
             <Card className="absolute w-full h-full flex flex-col items-center justify-center p-6 text-center" style={{ backfaceVisibility: 'hidden', opacity: frontOpacity }}>
                 <p className="text-sm text-muted-foreground mb-2">Question</p>
-                <p className="text-xl font-semibold">{card.question}</p>
+                <p className="text-lg font-semibold sm:text-xl">{card.question}</p>
             </Card>
             <Card className="absolute w-full h-full flex flex-col items-center justify-center p-6 text-center" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
                 <p className="text-sm text-muted-foreground mb-2">Answer</p>
-                <p className="text-xl font-semibold">{card.answer}</p>
+                <p className="text-lg font-semibold sm:text-xl">{card.answer}</p>
                 {card.example && (
                     <>
                         <p className="text-sm text-muted-foreground mt-4 mb-2">Example</p>

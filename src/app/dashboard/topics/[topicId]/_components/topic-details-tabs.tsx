@@ -24,7 +24,7 @@ export function TopicDetailsTabs({ initialTopic, flashcards, testQuestions }: To
 
   return (
     <Tabs defaultValue="summary" className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList className="grid w-full grid-cols-1 gap-1.5 sm:grid-cols-3 sm:gap-0">
         <TabsTrigger value="summary"><BookText className="mr-2 h-4 w-4" />Summary</TabsTrigger>
         <TabsTrigger value="flashcards"><Copy className="mr-2 h-4 w-4" />Flashcards</TabsTrigger>
         <TabsTrigger value="test"><TestTube className="mr-2 h-4 w-4" />Practice Test</TabsTrigger>
