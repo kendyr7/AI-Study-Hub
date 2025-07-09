@@ -34,14 +34,12 @@ function NavLink({ href, icon, label }: { href: string; icon: React.ReactNode; l
     const isActive = useIsActivePath(href);
     return (
         <SidebarMenuItem>
-            <Link href={href} passHref legacyBehavior>
-                <SidebarMenuButton asChild isActive={isActive} tooltip={label}>
-                    <a>
-                        {icon}
-                        <span>{label}</span>
-                    </a>
-                </SidebarMenuButton>
-            </Link>
+            <SidebarMenuButton asChild isActive={isActive} tooltip={label}>
+                <Link href={href}>
+                    {icon}
+                    <span>{label}</span>
+                </Link>
+            </SidebarMenuButton>
         </SidebarMenuItem>
     );
 }
@@ -64,27 +62,23 @@ export function AppSidebar() {
         <Separator className="my-2" />
         <SidebarMenu>
           <SidebarMenuItem>
-             <Link href="/dashboard/profile" passHref legacyBehavior>
-                <SidebarMenuButton asChild tooltip="Profile">
-                    <a>
-                        <Avatar className="h-7 w-7">
-                            <AvatarImage src="https://placehold.co/100x100.png" alt="@shadcn" data-ai-hint="user avatar" />
-                            <AvatarFallback>U</AvatarFallback>
-                        </Avatar>
-                        <span>User Profile</span>
-                    </a>
-                </SidebarMenuButton>
-             </Link>
+            <SidebarMenuButton asChild tooltip="Profile">
+                <Link href="/dashboard/profile">
+                    <Avatar className="h-7 w-7">
+                        <AvatarImage src="https://placehold.co/100x100.png" alt="@shadcn" data-ai-hint="user avatar" />
+                        <AvatarFallback>U</AvatarFallback>
+                    </Avatar>
+                    <span>User Profile</span>
+                </Link>
+            </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-             <Link href="/" passHref legacyBehavior>
-                <SidebarMenuButton asChild tooltip="Logout">
-                    <a>
-                        <LogOut />
-                        <span>Logout</span>
-                    </a>
-                </SidebarMenuButton>
-            </Link>
+            <SidebarMenuButton asChild tooltip="Logout">
+                <Link href="/">
+                    <LogOut />
+                    <span>Logout</span>
+                </Link>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
