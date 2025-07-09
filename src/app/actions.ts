@@ -102,6 +102,94 @@ export async function archiveTopicAction(payload: { topicId: string }) {
     }
 }
 
+export async function restoreTopicAction(payload: { topicId: string }) {
+    if (!adminDb) {
+      return { success: false, error: "Database not configured." };
+    }
+    const { topicId } = payload;
+    try {
+      const topicRef = adminDb.collection('topics').doc(topicId);
+      const topicDoc = await topicRef.get();
+      if (!topicDoc.exists) {
+        return { success: false, error: "Topic not found." };
+      }
+      const topicData = topicDoc.data() as Topic;
+
+      // Find the highest order number in the destination folder
+      const topicsInFolderQuery = adminDb.collection('topics')
+        .where('userId', '==', topicData.userId)
+        .where('folderId', '==', topicData.folderId)
+        .where('status', '==', 'active');
+        
+      const topicsInFolderSnapshot = await topicsInFolderQuery.count().get();
+      const newOrder = topicsInFolderSnapshot.data().count;
+
+      await topicRef.update({
+        status: 'active',
+        order: newOrder,
+        archivedAt: admin.firestore.FieldValue.delete(),
+      });
+      return { success: true };
+    } catch (error: any) {
+      console.error("Error restoring topic:", error);
+      return { success: false, error: `Failed to restore topic: ${error.message}` };
+    }
+}
+
+async function deleteCollection(collectionRef: admin.firestore.CollectionReference, batchSize: number) {
+    const query = collectionRef.limit(batchSize);
+  
+    return new Promise((resolve, reject) => {
+      deleteQueryBatch(query, resolve).catch(reject);
+    });
+}
+
+async function deleteQueryBatch(query: admin.firestore.Query, resolve: (value?: unknown) => void) {
+    const snapshot = await query.get();
+
+    const batchSize = snapshot.size;
+    if (batchSize === 0) {
+        resolve();
+        return;
+    }
+
+    const batch = adminDb!.batch();
+    snapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref);
+    });
+    await batch.commit();
+
+    process.nextTick(() => {
+        deleteQueryBatch(query, resolve);
+    });
+}
+
+export async function deleteTopicPermanentlyAction(payload: { topicId: string }) {
+    if (!adminDb) {
+      return { success: false, error: "Database not configured." };
+    }
+    const { topicId } = payload;
+    try {
+        const topicRef = adminDb.collection('topics').doc(topicId);
+        
+        const flashcardsRef = topicRef.collection('flashcards');
+        const testQuestionsRef = topicRef.collection('testQuestions');
+        
+        await Promise.all([
+            deleteCollection(flashcardsRef, 50),
+            deleteCollection(testQuestionsRef, 50),
+        ]);
+
+        await topicRef.delete();
+
+        return { success: true };
+    } catch (error: any) {
+        console.error("Error deleting topic permanently:", error);
+        return { success: false, error: `Failed to delete topic: ${error.message}` };
+    }
+}
+
+
 export async function updateTopicSummaryAction(formData: { topicId: string; summary: string }) {
   if (!adminDb) {
     console.error("Firebase Admin not initialized. Cannot update topic.");

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Archive } from "lucide-react";
 import { adminDb } from "@/lib/firebase-server";
 import type { Topic, Folder } from "@/lib/types";
 import { TopicsList } from "./_components/topics-list";
@@ -63,6 +63,12 @@ export default async function TopicsPage() {
                     <p className="text-muted-foreground">Organize your study materials into folders and topics.</p>
                 </div>
                 <div className="flex items-center space-x-2">
+                    <Button variant="outline" asChild>
+                        <Link href="/dashboard/archive">
+                            <Archive className="mr-2 h-4 w-4" />
+                            View Archive
+                        </Link>
+                    </Button>
                     <Button asChild>
                         <Link href="/dashboard/topics/new">
                             <PlusCircle className="mr-2 h-4 w-4" />
