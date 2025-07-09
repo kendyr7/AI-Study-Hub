@@ -10,7 +10,6 @@ async function getArchivedTopics(userId: string) {
     const topicsSnapshot = await adminDb.collection('topics')
         .where('userId', '==', userId)
         .where('status', '==', 'archived')
-        .orderBy('archivedAt', 'desc')
         .get();
 
     const topics: Topic[] = topicsSnapshot.docs.map(doc => {
@@ -29,6 +28,9 @@ async function getArchivedTopics(userId: string) {
             archivedAt: data.archivedAt ? data.archivedAt.toDate() : undefined,
         };
     });
+
+    // Sort in application code to avoid needing a composite index for the query
+    topics.sort((a, b) => (b.archivedAt?.getTime() || 0) - (a.archivedAt?.getTime() || 0));
 
     return topics;
 }
